@@ -1,0 +1,1979 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#c2410c">
+<title>라벨지 인쇄 · 엑셀 주소록으로 주소 라벨 만들기, A4 라벨지 규격 그대로 (설치 없이)</title>
+<meta name="description" content="엑셀 주소록을 붙여 넣거나 xlsx·csv 파일을 열면 시중 A4 라벨지 칸 배치(14칸·16칸·21칸·24칸 등 60여 종)에 맞춰 주소 라벨을 자동으로 채웁니다. 이름표·네임스티커처럼 같은 내용을 한 장 가득 채우기, 쓰다 남은 라벨지 이어 쓰기(시작 칸), 프린터 밀림 보정까지. 프로그램 설치·회원가입 없이, 주소록은 서버로 보내지 않고 브라우저 안에서만 처리합니다.">
+<meta property="og:title" content="라벨지 인쇄 · 엑셀 주소록으로 주소 라벨 만들기">
+<meta property="og:description" content="엑셀 주소록 붙여넣기 한 번으로 A4 라벨지 주소 라벨 완성. 칸 수·크기만 고르면 여백은 자동. 이름표 한 장 가득·시작 칸·위치 보정. 설치 없이, 업로드 없이.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://hwj-hub.github.io/label_print/">
+<meta property="og:image" content="https://hwj-hub.github.io/label_print/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="라벨지 인쇄 — 엑셀 주소록을 붙여 넣으면 A4 라벨지 칸에 맞춰 주소 라벨로 채워 주는 무료 도구">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%8F%B7%3C/text%3E%3C/svg%3E">
+<style id="pageStyle"></style>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+:root{
+  color-scheme:light dark;
+  --bg:#faf5f1; --card:#fff; --card2:#f8f2ed; --fg:#24160e; --muted:#76604f; --line:#eadcd0;
+  --accent:#c2410c; --accent2:#ea580c; --afg:#fff;
+  --ok:#047857; --okbg:#e6f6f0; --warn:#b45309; --warnbg:#fef4e6; --danger:#dc2626; --dangerbg:#fdecec;
+  --shadow:0 1px 2px rgba(36,22,14,.05),0 8px 24px -14px rgba(36,22,14,.30);
+  --r:16px;
+}
+@media (prefers-color-scheme:dark){
+ :root{
+  --bg:#150e0a; --card:#21160f; --card2:#1a110c; --fg:#f6ece4; --muted:#bca796; --line:#3a2a1f;
+  --accent:#fdba74; --accent2:#fed7aa; --afg:#2a1206;
+  --ok:#34d399; --okbg:#0c2b23; --warn:#fbbf24; --warnbg:#2a2110; --danger:#f87171; --dangerbg:#2c1414;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px -16px rgba(0,0,0,.8);
+ }
+}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--fg);line-height:1.55;word-break:keep-all;overflow-wrap:anywhere;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Malgun Gothic","Apple SD Gothic Neo",Roboto,sans-serif;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+.wrap{max-width:1180px;margin:0 auto;padding:0 14px calc(70px + env(safe-area-inset-bottom))}
+.hide{display:none !important}
+.nw{white-space:nowrap}
+
+/* ══ 광고 슬롯 ══ 자리만 비워 두고 화면 폭에 맞는 크기를 AD 가 채운다.
+   크기를 미리 잡아 두어 광고가 늦게 떠도 화면이 밀리지 않는다(애드핏: 광고 공간은 고정되어야 함) */
+.ad-slot{display:flex;align-items:center;justify-content:center;margin:10px auto;max-width:100%}
+.ad-top{width:320px;height:50px;max-width:100%}
+.ad-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;border:1px dashed var(--line);
+  border-radius:8px;background:var(--card2);color:var(--muted);font-size:11px;letter-spacing:.08em;font-weight:600}
+/* ── 인앱 브라우저 안내 띠 ── 앱 안 WebView 는 파일을 내려받지 못한다 */
+.iabar{display:none;align-items:center;gap:10px;margin:10px 0 0;padding:11px 12px;border-radius:12px;
+  background:var(--warnbg);border:1px solid color-mix(in srgb,var(--warn) 34%,transparent);line-height:1.5}
+body.inapp .iabar{display:flex}
+.iabar .ia-t{flex:1 1 auto;min-width:0;font-size:12.5px;font-weight:700;color:var(--fg)}
+.iabar .ia-t small{display:block;font-size:11.5px;font-weight:600;color:var(--muted);margin-top:2px}
+.iabar .ia-go{flex:0 0 auto;font:inherit;font-size:12.5px;font-weight:800;color:#fff;border:0;border-radius:999px;
+  padding:9px 14px;min-height:38px;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2))}
+@media (prefers-color-scheme:dark){.iabar .ia-go{color:var(--afg)}}
+.iabar .ia-x{flex:0 0 auto;width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;
+  color:var(--muted);font:inherit;font-size:12px;line-height:1;cursor:pointer}
+/* ── 앱 안에서 열었을 때 막는 창 ── 토스트(z-index 99)보다는 아래에 둔다 */
+.iamodal{position:fixed;inset:0;z-index:90;display:none;align-items:center;justify-content:center;padding:18px;
+  background:rgba(20,10,4,.72);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+body.ia-lock{overflow:hidden}
+body.ia-lock .iamodal{display:flex}
+body.ia-lock .wrap{pointer-events:none}
+.iasheet{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);
+  width:100%;max-width:420px;max-height:92vh;overflow:auto;padding:22px 18px 16px;text-align:center}
+.iasheet .iaic{font-size:34px;line-height:1;margin-bottom:10px}
+.iasheet h2{font-size:17.5px;font-weight:800;letter-spacing:-.02em;margin:0 0 10px;line-height:1.45;text-wrap:balance}
+.iap{font-size:13.5px;font-weight:600;color:var(--muted);line-height:1.7;margin:0 0 14px}
+.iap b{color:var(--fg);font-weight:800}
+.iasteps{text-align:left;margin:0 0 16px;padding:12px 14px 12px 32px;border-radius:12px;background:var(--card2);
+  font-size:13px;font-weight:600;color:var(--muted);line-height:1.7}
+.iasteps li+li{margin-top:5px}
+.iasteps b{color:var(--fg);font-weight:800}
+.iabtn{display:block;width:100%;font:inherit;font-size:15px;font-weight:800;color:#fff;border:0;border-radius:12px;
+  padding:14px;min-height:52px;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:var(--shadow)}
+@media (prefers-color-scheme:dark){.iabtn{color:var(--afg)}}
+.iafine{margin:12px 0 0;font-size:12px;font-weight:600;color:var(--muted);line-height:1.6}
+.iafine button{font:inherit;font-size:12px;font-weight:700;color:var(--muted);background:none;border:0;padding:6px 8px;
+  text-decoration:underline;cursor:pointer;min-height:36px}
+.dwarn{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--warnbg);font-size:12.5px;font-weight:700;line-height:1.6}
+.dwarn button{font:inherit;font-size:12.5px;font-weight:800;color:var(--accent);background:none;border:0;padding:9px 2px;margin:-9px 0;
+  text-decoration:underline;cursor:pointer}
+.ad-lab{display:block;text-align:center;font-size:9.5px;font-weight:700;letter-spacing:.14em;color:var(--muted);opacity:.7;margin:12px 0 -4px}
+body.no-ad .ad-slot,.ad-none{display:none !important}
+/* PC 옆 칸 — 미리보기 카드 바로 위 320×50 (좁은 화면에서는 숨긴다) */
+@media (max-width:979px){#ad-side{display:none}}
+@media (min-width:980px){#ad-side{margin:14px auto 0}}
+/* 본문 광고는 버튼·입력칸에서 넉넉히 떼어 놓는다 — 실수로 눌리는 자리는 금지 */
+#ad-mid{margin:18px auto}
+
+/* ── 하단 오버형 ── 콘텐츠를 가리지 않도록 본문 아래 여백을 같이 늘린다(애드핏: 콘텐츠를 덮는 배치 금지).
+   입력 중·미리보기를 보는 중에는 띄우지 않는다 — 핵심 행동 중 광고 노출 금지 조항 */
+#anchor{position:fixed;left:0;right:0;bottom:0;z-index:45;display:flex;align-items:center;justify-content:center;
+  background:var(--card);border-top:1px solid var(--line);box-shadow:0 -8px 22px -14px rgba(0,0,0,.55);
+  padding:8px 4px calc(8px + env(safe-area-inset-bottom));transform:translateY(120%);
+  /* 바 위쪽에 붙은 「광고」 라벨·닫기는 translateY 로 내려도 화면에 걸쳐 남는다 — 통째로 감춘다 */
+  visibility:hidden;pointer-events:none;transition:transform .22s,visibility 0s linear .22s}
+#anchor.on{transform:none;visibility:visible;pointer-events:auto;transition:transform .22s,visibility 0s}
+#anchor .ad-slot{margin:0}
+#anchor .amk{position:absolute;left:10px;top:-11px;font-size:9px;font-weight:700;letter-spacing:.1em;color:var(--muted);
+  background:var(--card);border:1px solid var(--line);border-radius:5px;padding:0 5px;line-height:15px}
+/* 닫기는 광고 영역 밖에 둔다 — 광고 안에 닫기 버튼을 넣는 것은 금지(오클릭 방지) */
+#anchor .axl{position:absolute;right:6px;top:-38px;width:36px;height:36px;border-radius:50%;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:13px;line-height:1;box-shadow:var(--shadow)}
+#anchor .axl::before{content:'';position:absolute;inset:-6px}
+body.anch .wrap{padding-bottom:calc(124px + env(safe-area-inset-bottom))}
+body.anch #toast{bottom:calc(118px + env(safe-area-inset-bottom))}
+@media (min-width:980px){#anchor{display:none}}
+
+/* ── 인쇄·저장 완료 카드 ── 화면을 덮지 않고 본문 흐름 안에 펼친다 */
+#doneCard{border-color:color-mix(in srgb,var(--ok) 40%,var(--line))}
+#doneCard .ad-lab{margin-top:16px}
+.dmsg{margin:0 0 10px;font-size:14px;font-weight:700;line-height:1.6}
+.dsteps{margin:0;padding:0 0 0 20px;font-size:13px;font-weight:600;line-height:1.75;color:var(--muted)}
+.dsteps b{color:var(--fg);font-weight:800}
+
+header{text-align:center;padding:14px 0 2px}
+.logo{display:inline-flex;align-items:center;gap:9px;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.logo .ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:17px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:var(--shadow)}
+.tag{font-size:14.5px;font-weight:600;color:var(--muted);margin:8px 0 0;text-wrap:balance}
+.tag b{color:var(--fg)}
+.badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:10px}
+.badge{font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:var(--okbg);color:var(--ok);border:1px solid transparent}
+.badge.gray{background:var(--card2);color:var(--muted);border-color:var(--line)}
+
+/* ── 두 칸 배치 · 넓은 화면에서 미리보기를 옆에 붙인다 ── */
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:0 16px}
+@media (min-width:980px){
+  .layout{grid-template-columns:minmax(0,1fr) 430px;align-items:start}
+  /* 옆 칸이 화면보다 길면 스스로 스크롤한다 — sticky 만 두면 완료 카드가 화면 밖에 남는다 */
+  .side{position:sticky;top:8px;max-height:calc(100vh - 16px);overflow:auto;overscroll-behavior:contain;
+    scrollbar-width:thin;padding:0 2px 12px}
+  .side .pvbox canvas{max-height:calc(100vh - 330px)}
+}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:16px;margin-top:14px}
+.card h2{font-size:12px;font-weight:800;color:var(--muted);margin:0 0 12px;letter-spacing:.07em;
+  display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card h2 .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;margin-right:6px;
+  background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent);letter-spacing:0;font-size:11.5px}
+.pvinfo{font-size:11.5px;font-weight:700;color:var(--accent);letter-spacing:0;text-align:right;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.row{margin-top:16px}
+.row:first-child{margin-top:0}
+.lab{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:13.5px;font-weight:800;margin-bottom:8px}
+.lab .hint{font-weight:500;color:var(--muted);font-size:12px;text-align:right}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{flex:1 1 84px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font:inherit;font-size:13px;
+  font-weight:700;padding:9px 6px;border-radius:11px;cursor:pointer;min-height:48px;transition:.15s;line-height:1.3}
+.seg button i{display:block;font-style:normal;font-size:11px;font-weight:600;color:var(--muted);margin-top:2px}
+.seg button:hover{border-color:var(--accent)}
+.seg button.on{border-color:transparent;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:var(--shadow)}
+.seg button.on i{color:rgba(255,255,255,.85)}
+@media (prefers-color-scheme:dark){.seg button.on{color:var(--afg)}.seg button.on i{color:rgba(42,18,6,.75)}}
+.seg.sm button{min-height:42px;font-size:12.5px;padding:7px 6px}
+
+/* ── 1. 라벨지 ── */
+.specrow{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:12px;align-items:start}
+.sheet{width:92px;height:130px;display:block}
+.sheet .pg{fill:#fff;stroke:#b9a797}
+.sheet .cl{fill:color-mix(in srgb,var(--accent) 22%,#fff);stroke:var(--accent);stroke-width:.5}
+@media (prefers-color-scheme:dark){.sheet .pg{fill:#f4ede7}}
+.sinfo{margin-top:8px;font-size:12.5px;font-weight:600;color:var(--muted);line-height:1.65}
+.sinfo b{color:var(--fg);font-weight:800}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:12.5px;font-weight:700;
+  padding:7px 11px;border-radius:999px;cursor:pointer;min-height:40px;line-height:1.25}
+.chip i{font-style:normal;font-weight:600;color:var(--muted);font-size:11.5px}
+.chip:hover{border-color:var(--accent)}
+.chip.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--card));color:var(--accent)}
+.chip.on i{color:var(--accent)}
+.cgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:10px}
+@media (max-width:520px){.cgrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.nf{position:relative;min-width:0}
+.nf span{position:absolute;left:10px;top:5px;font-size:10.5px;font-weight:800;color:var(--muted);pointer-events:none;letter-spacing:.02em}
+.nf input{display:block;width:100%;font:inherit;font-size:16px;font-weight:700;color:var(--fg);background:var(--card2);
+  border:1px solid var(--line);border-radius:10px;padding:19px 10px 5px;min-height:48px}
+.nf input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+
+.inp,.sel,textarea.ta{display:block;width:100%;font:inherit;font-size:16px;font-weight:600;color:var(--fg);background:var(--card2);
+  border:1px solid var(--line);border-radius:11px;padding:9px 11px;min-height:44px}
+.sel{font-size:14px;font-weight:700;padding:10px 12px;min-height:46px}
+textarea.ta{font-size:14px;line-height:1.6;min-height:150px;resize:vertical;font-family:inherit;tab-size:12;white-space:pre;overflow:auto}
+textarea.ta.wrapit{white-space:pre-wrap}
+.inp:focus,.sel:focus,textarea.ta:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:transparent}
+.sub-h{font-size:12px;font-weight:800;color:var(--muted);letter-spacing:.06em;margin:18px 0 0;padding-top:14px;border-top:1px solid var(--line)}
+.chk{display:flex;gap:9px;align-items:flex-start;padding:8px 0;cursor:pointer;font-size:13.5px;font-weight:700}
+.chk input{flex:0 0 auto;width:20px;height:20px;margin:1px 0 0;accent-color:var(--accent)}
+.chk i{display:block;font-style:normal;font-size:12px;font-weight:600;color:var(--muted);margin-top:2px;line-height:1.6}
+.tools{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 0}
+.mini{border:1px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-size:13px;font-weight:700;
+  padding:9px 14px;border-radius:999px;cursor:pointer;min-height:42px;transition:.15s}
+.mini:hover{border-color:var(--accent)}
+.mini.danger:hover{border-color:var(--danger);color:var(--danger)}
+#file{display:none}
+.drophint{border:2px dashed transparent;border-radius:13px;transition:.15s}
+.drophint.over{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 6%,transparent)}
+
+/* 열 짝짓기 */
+.maps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:10px}
+@media (min-width:600px){.maps{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.map{position:relative;min-width:0}
+.map span{position:absolute;left:10px;top:5px;font-size:10.5px;font-weight:800;color:var(--muted);pointer-events:none;z-index:1}
+.map select{display:block;width:100%;font:inherit;font-size:13.5px;font-weight:700;color:var(--fg);background:var(--card2);
+  border:1px solid var(--line);border-radius:10px;padding:19px 8px 5px;min-height:48px;text-overflow:ellipsis}
+.map select.unset{color:var(--muted);font-weight:600}
+.dsum{margin-top:10px;font-size:12.5px;font-weight:700;color:var(--muted);line-height:1.6}
+.dsum b{color:var(--accent);font-weight:800}
+.dsum .bad{color:var(--danger)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.rng{display:flex;align-items:center;gap:10px}
+.rng input[type=range]{flex:1 1 auto;accent-color:var(--accent);height:32px}
+.rng output{flex:0 0 auto;min-width:62px;text-align:right;font-size:13.5px;font-weight:800;color:var(--accent)}
+
+.note{border-radius:11px;padding:10px 12px;font-size:12.5px;font-weight:600;line-height:1.65;margin-top:11px}
+.note b{font-weight:800}
+.note.info{background:var(--card2);color:var(--muted);border:1px solid var(--line)}
+.note.warn{background:var(--warnbg);color:var(--warn)}
+.fine{font-size:12px;font-weight:600;color:var(--muted);line-height:1.65;margin:9px 0 0}
+.fine b{color:var(--fg)}
+
+/* ── 미리보기 · 인쇄 ── */
+.btn{flex:1 1 90px;border:1px solid var(--line);background:var(--card2);color:var(--fg);font:inherit;font-size:14px;font-weight:800;
+  padding:10px 10px;border-radius:12px;cursor:pointer;min-height:52px;transition:.15s;display:inline-flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:1px;text-align:center;line-height:1.25}
+.btn i{font-style:normal;font-size:10.5px;font-weight:700;color:var(--muted)}
+.btn:hover:not(:disabled){border-color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.pri{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent;box-shadow:var(--shadow)}
+.btn.pri i{color:rgba(255,255,255,.88)}
+.btn.pri:hover:not(:disabled){filter:brightness(1.06)}
+@media (prefers-color-scheme:dark){.btn.pri{color:var(--afg)}.btn.pri i{color:rgba(42,18,6,.75)}}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.mini.prt{display:block;width:100%;margin-top:7px;min-height:40px;padding:8px 14px;font-size:12.5px;color:var(--muted)}
+.mini.prt:disabled{opacity:.45;cursor:not-allowed}
+.pvstate{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:0;white-space:nowrap}
+.pvbox{margin-top:12px;border:1px solid var(--line);border-radius:12px;padding:10px;display:flex;justify-content:center;
+  background:color-mix(in srgb,var(--line) 45%,var(--card2))}
+.pvbox canvas{display:block;max-width:100%;max-height:72vh;height:auto;background:#fff;box-shadow:0 2px 10px -4px rgba(0,0,0,.35);cursor:crosshair}
+.pvnav{display:flex;gap:6px;align-items:center;justify-content:center;margin-top:8px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.sq{border:1px solid var(--line);background:var(--card2);color:var(--muted);font:inherit;font-size:15px;font-weight:800;
+  width:44px;height:40px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0}
+.sq:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.sq:disabled{opacity:.35;cursor:default}
+.prset{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin-top:10px}
+.warnline{margin-top:8px;font-size:12px;font-weight:700;color:var(--danger);line-height:1.6}
+
+.use{list-style:none;margin:0;padding:0}
+.use li{position:relative;padding-left:26px;margin-bottom:13px;font-size:13.5px;font-weight:600;line-height:1.65}
+.use li:last-child{margin-bottom:0}
+.use li::before{content:"▸";position:absolute;left:4px;top:0;color:var(--accent);font-weight:800}
+.use li b{font-weight:800}
+.use li .d{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin-top:3px;line-height:1.7}
+.use li code{background:var(--card2);border:1px solid var(--line);border-radius:6px;padding:1px 6px;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12px;color:var(--accent)}
+@media (min-width:980px){.use{columns:2;column-gap:28px}.use li{break-inside:avoid}}
+
+details{border-top:1px solid var(--line);padding:12px 0}
+details:first-of-type{border-top:0}
+summary{cursor:pointer;font-weight:700;font-size:14px;list-style:none;padding:10px 0;margin:-10px 0}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"＋ ";color:var(--accent);font-weight:800}
+details[open] summary::before{content:"－ "}
+details p{margin:8px 0 0;font-size:13.5px;color:var(--muted);line-height:1.8}
+details p b{color:var(--fg)}
+
+footer{text-align:center;color:var(--muted);font-size:12px;margin-top:22px;line-height:1.8}
+footer b{color:var(--fg)}
+
+/* ── 모바일 하단 바 ── 내용을 적는 동안 미리보기가 화면 밖이면 띄운다 */
+#mbar{position:fixed;left:0;right:0;bottom:0;z-index:50;transform:translateY(115%);transition:transform .22s;
+  background:var(--card);border-top:1px solid var(--line);box-shadow:0 -8px 22px -14px rgba(0,0,0,.55);
+  padding:9px 14px calc(9px + env(safe-area-inset-bottom))}
+#mbar.on{transform:none}
+#mbar .in{max-width:700px;margin:0 auto;display:flex;align-items:center;gap:10px}
+#mbar .k{flex:1 1 auto;min-width:0;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.03em}
+#mbar .k b{display:block;font-size:13.5px;font-weight:800;color:var(--fg);letter-spacing:-.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#mbar .go{flex:0 0 auto;font:inherit;font-size:13px;font-weight:800;color:#fff;padding:10px 15px;border-radius:999px;border:0;cursor:pointer;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));min-height:42px}
+@media (prefers-color-scheme:dark){#mbar .go{color:var(--afg)}}
+@media (min-width:980px){#mbar{display:none}}
+/* 휴대폰 — 라벨지 → 내용 → 글자 → 미리보기·인쇄 순서 */
+@media (max-width:979px){
+  #form{display:contents}
+  #specCard{order:1} #dataCard{order:2} #styleCard{order:3} .side{order:4}
+}
+
+#toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:#24160e;color:#fff;font-size:13.5px;font-weight:700;line-height:1.5;
+  padding:10px 16px;border-radius:14px;width:max-content;opacity:0;pointer-events:none;transition:.25s;z-index:99;max-width:92vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (prefers-color-scheme:dark){#toast{background:#f6ece4;color:#2a1206}}
+
+@media (max-width:430px){
+  .card{padding:14px}
+  .lab{flex-direction:column;align-items:stretch;gap:2px}
+  .lab .hint{text-align:left}
+  .seg button{flex:1 1 70px;font-size:12.5px}
+  .tag{font-size:14px}
+  .specrow{grid-template-columns:minmax(0,1fr) 70px}
+  .sheet{width:70px;height:99px}
+  .prset{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+
+/* ══ 주의 문구 ══ */
+.nbx{border:1px solid var(--warn);border-radius:14px;background:var(--warnbg);padding:14px 15px;margin-top:14px}
+.nbx-h{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;color:var(--warn);margin:0 0 10px}
+.nbx-h .ic{flex:0 0 auto;width:19px;height:19px;border-radius:6px;background:var(--warn);color:var(--warnbg);
+  font-size:12px;font-weight:800;display:grid;place-items:center;line-height:1}
+.nbx ul{list-style:none;margin:0;padding:0}
+.nbx li{position:relative;padding-left:12px;margin-bottom:7px;font-size:12px;font-weight:600;line-height:1.68;color:var(--warn)}
+.nbx li:last-child{margin-bottom:0}
+.nbx li::before{content:"·";position:absolute;left:1px;top:-1px;font-weight:800}
+.nbx li b{font-weight:800}
+.nbx .nbx-f{margin:11px 0 0;padding-top:10px;border-top:1px solid color-mix(in srgb,var(--warn) 32%,transparent);
+  font-size:12px;font-weight:700;line-height:1.72;color:var(--warn)}
+.nbx .nbx-f b{font-weight:800}
+
+/* ── 인쇄 — 라벨 쪽만 종이에 싣는다(광고·화면은 빠진다). 글자는 그림이 아니라 글자 그대로 찍힌다 ── */
+#printArea{display:none}
+@media print{
+  body.printing > *:not(#printArea){display:none !important}
+  body.printing #printArea{display:block}
+  body.printing{background:#fff}
+  .pp{position:relative;width:210mm;height:297mm;overflow:hidden;page-break-after:always;break-after:page;background:#fff;color:#000}
+  .pp:last-child{page-break-after:auto;break-after:auto}
+  .pp .lb{position:absolute;box-sizing:border-box}
+  .pp .lb.g{border:.2mm dashed #888}
+  .pp .lb.g.c{border-radius:50%}
+  .pp .ln{position:absolute;white-space:pre;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .pp .no{position:absolute;left:1mm;top:.6mm;font-size:2.4mm;color:#888;font-family:Arial,sans-serif}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ╔══════════════════════════════════════════════════════════════════════╗
+     ║  광고 자리 ① 맨 위 · 320×50 (모바일·PC 같은 크기)                     ║
+     ║  단위 ID 는 스크립트 아래쪽 AD.units 한 곳에서 바꿉니다.               ║
+     ║  ins·script 를 여기 직접 쓰지 않고 AD 가 넣는 이유                     ║
+     ║   · 보이는 자리만 부르려고(안 보이는 광고는 부르지 않음)               ║
+     ║   · 한 페이지 4개 제한을 코드 한 곳에서 지키려고                       ║
+     ║  크기는 휴대폰에 들어가는 것만 씁니다 — 320×50 · 320×100 · 300×250     ║
+     ║  한 화면에 4곳 — 모바일 ① 맨 위 ③ 본문 ④ 완료 카드 ⑤ 하단 오버형      ║
+     ║              PC   ① 맨 위 ② 미리보기 위 ③ 본문 ④ 완료 카드            ║
+     ╚══════════════════════════════════════════════════════════════════════╝ -->
+<div class="ad-slot ad-top" id="ad-top"></div>
+
+<!-- 네이버·카카오 앱 안에서 열렸을 때만 보이는 띠 (body.inapp) -->
+<div class="iabar" id="iabar">
+  <div class="ia-t"><span id="iaMsg">앱 안에서 열려서 인쇄·저장이 안 될 수 있어요.</span>
+    <small id="iaSub">주소록을 넣기 전에 옮기면 다시 붙여 넣지 않아도 됩니다.</small></div>
+  <button class="ia-go" id="iaGo" type="button">크롬에서 열기</button>
+  <button class="ia-x" id="iaX" type="button" aria-label="안내 닫기">✕</button>
+</div>
+
+<header>
+  <div class="logo"><span class="ico">🏷️</span><span>라벨지 인쇄</span></div>
+  <p class="tag"><b>엑셀 주소록</b>을 붙여 넣으면 <b>A4 라벨지 칸</b>에 맞춰 라벨을 채워&nbsp;줍니다</p>
+  <div class="badges">
+    <span class="badge">🔒 주소록이 서버로 전송되지 않음</span>
+    <span class="badge gray">A4 라벨지 60여 종</span>
+    <span class="badge gray">이름표 한 장 가득 채우기</span>
+    <span class="badge gray">프로그램 설치 없음</span>
+  </div>
+</header>
+
+<div class="layout">
+<main id="form">
+
+<!-- 1. 라벨지 -->
+<section class="card" id="specCard">
+  <h2><span><span class="n">1</span>라벨지 고르기</span><span class="pvinfo" id="specHint"></span></h2>
+  <div class="seg sm" id="segBrand">
+    <button type="button" data-b="list">목록에서 고르기<i>칸 수 · 라벨 크기</i></button>
+    <button type="button" data-b="custom">직접 입력<i>mm 치수</i></button>
+  </div>
+  <div class="specrow" style="margin-top:10px">
+    <div>
+      <div id="specPick">
+        <select class="sel" id="selSpec" aria-label="라벨지 칸 수와 크기"></select>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div id="customBox" class="hide">
+        <div class="cgrid">
+          <label class="nf"><span>라벨 가로 mm</span><input type="number" inputmode="decimal" step="0.1" min="5" max="210" id="cW"></label>
+          <label class="nf"><span>라벨 세로 mm</span><input type="number" inputmode="decimal" step="0.1" min="5" max="297" id="cH"></label>
+          <label class="nf"><span>가로 칸 수(열)</span><input type="number" inputmode="numeric" step="1" min="1" max="12" id="cC"></label>
+          <label class="nf"><span>세로 칸 수(행)</span><input type="number" inputmode="numeric" step="1" min="1" max="40" id="cR"></label>
+          <label class="nf"><span>위 여백 mm</span><input type="number" inputmode="decimal" step="0.1" min="0" max="150" id="cT"></label>
+          <label class="nf"><span>왼쪽 여백 mm</span><input type="number" inputmode="decimal" step="0.1" min="0" max="150" id="cL"></label>
+          <label class="nf"><span>가로 간격 mm</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" id="cHG"></label>
+          <label class="nf"><span>세로 간격 mm</span><input type="number" inputmode="decimal" step="0.1" min="0" max="100" id="cVG"></label>
+        </div>
+        <label class="chk"><input type="checkbox" id="cCirc"><span>동그란 라벨</span></label>
+        <div class="tools" style="margin-top:0">
+          <button class="mini" id="cCenter" type="button">여백 가운데로 맞추기</button>
+        </div>
+      </div>
+      <p class="sinfo" id="sinfo"></p>
+    </div>
+    <svg class="sheet" id="sheetSvg" viewBox="0 0 210 297" aria-hidden="true"></svg>
+  </div>
+  <p class="fine">라벨지 포장에 적힌 <b>한 장 칸 수</b>와 <b>라벨 한 칸 크기(mm)</b>를 보고 고르세요(예: 14칸 · 99.1×38.1mm).
+    크기가 같은데 <b>위 여백</b>만 다른 라벨지가 있어 두 개가 보이면, 자로 종이 위 끝에서 첫 칸까지 재 보거나 시험 인쇄로 맞는 쪽을 고르세요.
+    목록에 없으면 <b>직접 입력</b>에 자로 잰 치수를 넣으면 됩니다.</p>
+</section>
+
+<!-- 2. 내용 -->
+<section class="card" id="dataCard">
+  <h2><span><span class="n">2</span>내용 넣기</span><span class="pvinfo" id="dataHint"></span></h2>
+  <div class="seg" id="segMode">
+    <button type="button" data-m="addr">주소 라벨<i>엑셀 주소록</i></button>
+    <button type="button" data-m="same">같은 내용 가득<i>이름표·보내는 사람</i></button>
+    <button type="button" data-m="list">목록<i>한 칸에 하나씩</i></button>
+  </div>
+
+  <!-- 주소록 -->
+  <div id="mAddr" class="row">
+    <div class="lab"><span>주소록 붙여넣기</span><span class="hint">엑셀에서 표를 드래그 → 복사(Ctrl+C) → 여기 붙여넣기</span></div>
+    <div class="drophint" id="dropA">
+      <textarea class="ta" id="taAddr" spellcheck="false" autocomplete="off" aria-label="주소록"
+        placeholder="엑셀에서 머리글 줄까지 복사해 붙여 넣으세요.&#10;&#10;우편번호	이름	주소	상세주소&#10;12345	홍길동	○○시 ○○구 가상로 12	101동 1001호"></textarea>
+    </div>
+    <div class="tools">
+      <button class="mini" id="openFile" type="button">📂 엑셀·CSV 파일 열기</button>
+      <button class="mini" id="sampleA" type="button">예시 넣기</button>
+      <button class="mini danger" id="clearA" type="button">지우기</button>
+    </div>
+    <input type="file" id="file" accept=".xlsx,.csv,.txt,.tsv,text/csv,text/plain,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+    <div id="mapBox" class="hide">
+      <div class="sub-h">어느 열이 무엇인지</div>
+      <label class="chk" style="padding-bottom:0"><input type="checkbox" id="hasHead"><span>첫 줄은 머리글(제목 줄)입니다</span></label>
+      <div class="maps" id="maps"></div>
+      <div class="sub-h">받는 분 표시</div>
+      <div class="grid2" style="margin-top:10px">
+        <label class="map"><span>이름 뒤에 붙일 말</span>
+          <select id="selHonor">
+            <option value="귀하">귀하</option><option value="님">님</option><option value="앞">앞</option>
+            <option value="좌하">좌하</option><option value="귀중">귀중 (회사·기관)</option><option value="">붙이지 않음</option>
+          </select></label>
+        <label class="map"><span>한 분당 라벨</span>
+          <select id="selCopies">
+            <option value="1">1장</option><option value="2">2장</option><option value="3">3장</option><option value="4">4장</option><option value="5">5장</option>
+          </select></label>
+      </div>
+      <label class="chk"><input type="checkbox" id="optZip"><span>우편번호 표시<i>맨 윗줄에 작게 넣습니다</i></span></label>
+      <label class="chk" style="padding-top:0"><input type="checkbox" id="optTel"><span>연락처 표시<i>택배·물류 라벨이면 켜 두세요</i></span></label>
+    </div>
+    <p class="dsum" id="dsumA"></p>
+  </div>
+
+  <!-- 같은 내용 가득 -->
+  <div id="mSame" class="row hide">
+    <div class="lab"><span>라벨에 넣을 글</span><span class="hint">줄을 바꾸면 라벨 안에서도 줄이 바뀝니다</span></div>
+    <textarea class="ta wrapit" id="taSame" style="min-height:110px" spellcheck="false" aria-label="라벨에 넣을 글"
+      placeholder="예) 네임스티커·이름표&#10;홍길동&#10;○○초등학교 1학년 2반"></textarea>
+    <div class="tools">
+      <button class="mini" id="sampleS1" type="button">예시: 이름 스티커</button>
+      <button class="mini" id="sampleS2" type="button">예시: 보내는 사람</button>
+    </div>
+    <div class="row">
+      <div class="lab"><span>몇 장 인쇄</span><span class="hint">라벨지 장 수 · 시작 칸부터 끝까지 채웁니다</span></div>
+      <div class="seg sm" id="segSheets">
+        <button type="button" data-n="1">1장</button><button type="button" data-n="2">2장</button>
+        <button type="button" data-n="3">3장</button><button type="button" data-n="5">5장</button><button type="button" data-n="10">10장</button>
+      </div>
+    </div>
+    <p class="dsum" id="dsumS"></p>
+  </div>
+
+  <!-- 목록 -->
+  <div id="mList" class="row hide">
+    <div class="lab"><span>라벨 목록</span><span class="hint" id="listHint">한 줄이 라벨 한 칸입니다</span></div>
+    <textarea class="ta wrapit" id="taList" spellcheck="false" aria-label="라벨 목록"
+      placeholder="예) 파일 인덱스·물건 이름표·바코드 번호&#10;2026 회계 서류&#10;2026 인사 서류&#10;2026 계약서"></textarea>
+    <div class="seg sm" id="segSplit" style="margin-top:8px">
+      <button type="button" data-s="line">한 줄 = 한 칸</button>
+      <button type="button" data-s="block">빈 줄로 칸 나누기<i>여러 줄짜리 라벨</i></button>
+    </div>
+    <div class="grid2" style="margin-top:8px">
+      <label class="map"><span>한 항목당 라벨</span>
+        <select id="selCopiesL">
+          <option value="1">1장</option><option value="2">2장</option><option value="3">3장</option><option value="4">4장</option><option value="5">5장</option><option value="10">10장</option>
+        </select></label>
+      <button class="mini" id="sampleL" type="button" style="border-radius:11px">예시 넣기</button>
+    </div>
+    <p class="dsum" id="dsumL"></p>
+  </div>
+</section>
+
+<!-- 3. 글자 -->
+<section class="card" id="styleCard">
+  <h2><span><span class="n">3</span>글자 모양</span><span class="pvinfo" id="styleHint"></span></h2>
+  <div class="row">
+    <div class="lab"><span>글꼴</span></div>
+    <div class="seg sm" id="segFont">
+      <button type="button" data-f="sans">고딕</button>
+      <button type="button" data-f="serif">명조(바탕)</button>
+    </div>
+  </div>
+  <div class="row">
+    <div class="lab"><span>글자 크기</span><span class="hint">칸에 안 들어가면 그 라벨만 알아서 줄입니다</span></div>
+    <div class="rng"><input type="range" id="rngSize" min="6" max="48" step="0.5" aria-label="글자 크기"><output id="outSize">11pt</output></div>
+  </div>
+  <div class="row">
+    <div class="lab"><span>정렬</span></div>
+    <div class="seg sm" id="segAlign">
+      <button type="button" data-a="left">왼쪽<i id="alignSub">받는 분은 오른쪽</i></button>
+      <button type="button" data-a="center">가운데</button>
+    </div>
+  </div>
+  <label class="chk" id="rowBold"><input type="checkbox" id="optBold"><span>첫 줄을 크고 굵게<i>이름·제목 줄을 눈에 띄게</i></span></label>
+</section>
+
+</main>
+
+<aside class="side" id="side">
+  <!-- 광고 자리 ② PC 미리보기 카드 바로 위 320×50 · 좁은 화면에서는 숨깁니다 -->
+  <div class="ad-slot" id="ad-side"></div>
+  <section class="card pv" id="pvCard">
+    <h2><span>미리보기 · 인쇄</span><span class="pvstate" id="pvState"></span></h2>
+    <div class="actions">
+      <button class="btn pri" id="doPrint" type="button" disabled>바로 인쇄<i>라벨지를 넣고</i></button>
+      <button class="btn" id="dlPdf" type="button" disabled>PDF로 저장<i>다른 PC에서 인쇄</i></button>
+    </div>
+    <button class="mini prt" id="doTest" type="button">칸 테두리만 시험 인쇄 (일반 A4 종이에)</button>
+    <div class="pvbox"><canvas id="pv" width="10" height="10" aria-label="라벨지 미리보기 — 칸을 누르면 거기서부터 인쇄합니다"></canvas></div>
+    <div class="pvnav"><button class="sq" id="pvPrev" type="button" aria-label="앞 장">‹</button><span id="pvPos">1 / 1장</span><button class="sq" id="pvNext" type="button" aria-label="다음 장">›</button></div>
+    <div class="warnline hide" id="overWarn"></div>
+
+    <div class="sub-h">인쇄 설정</div>
+    <div class="prset">
+      <label class="nf"><span>시작 칸</span><input type="number" inputmode="numeric" min="1" step="1" id="inStart" aria-label="시작 칸 번호"></label>
+      <label class="nf"><span>↓ 아래로 mm</span><input type="number" inputmode="decimal" step="0.5" min="-10" max="10" id="offY" aria-label="아래로 옮기기 mm"></label>
+      <label class="nf"><span>→ 오른쪽 mm</span><input type="number" inputmode="decimal" step="0.5" min="-10" max="10" id="offX" aria-label="오른쪽으로 옮기기 mm"></label>
+    </div>
+    <p class="fine"><b>시작 칸</b> — 쓰다 남은 라벨지면 미리보기에서 <b>비어 있는 첫 칸을 누르세요.</b> 그 칸부터 채웁니다.<br>
+      <b>위치 보정</b> — 글자가 칸 아래로 밀려 찍히면 「아래로」를 <b>−</b>로, 오른쪽으로 밀리면 「오른쪽」을 <b>−</b>로.</p>
+    <label class="chk"><input type="checkbox" id="optGuide"><span>칸 테두리도 함께 인쇄<i>라벨 위치를 맞춰 볼 때만 · 실제 라벨에는 끄세요</i></span></label>
+    <p class="note warn">인쇄 창에서 <b>배율 100%(실제 크기)</b>·<b>여백 없음</b>으로 찍어야 칸이 맞습니다. 「페이지에 맞춤」이면 조금 작아져 어긋납니다.</p>
+  </section>
+
+  <!-- 광고 자리 ④ 인쇄·저장 완료 카드 300×250 — 누른 다음에 펼쳐지고, 화면을 덮지 않습니다.
+       닫기는 카드 머리(광고에서 멀리 떨어진 곳)에 둡니다 — 광고 안 닫기 버튼은 금지 -->
+  <section class="card hide" id="doneCard">
+    <h2><span id="doneTitle">인쇄 창을 열었습니다</span><button class="mini" id="doneHide" type="button">닫기</button></h2>
+    <p class="dmsg" id="doneMsg"></p>
+    <ol class="dsteps">
+      <li>라벨지를 넣기 전에 <b>일반 A4 종이에 한 장</b> 찍어 라벨지 뒤에 겹쳐 비춰 보세요. 칸이 맞으면 그때 라벨지로.</li>
+      <li>어긋나면 <b>인쇄 설정의 mm 보정</b>으로 옮기고, 인쇄 창의 <b>배율 100%·여백 없음</b>을 다시 확인하세요.</li>
+      <li>라벨지는 <b>프린터에 맞는 전용지</b>(레이저용·잉크젯용)를 쓰고, 한 번에 여러 장보다 <b>한 장씩</b> 넣는 편이 덜 걸립니다.</li>
+    </ol>
+    <p class="dwarn hide" id="doneInapp">인쇄 창이 안 뜨거나 파일이 안 보이나요? 앱 안 브라우저는 인쇄·내려받기가 막혀 있습니다.
+      <button type="button" id="doneGo">다른 브라우저로 열기</button></p>
+    <div id="doneAd"><span class="ad-lab">광고</span><div class="ad-slot" id="ad-done"></div></div>
+  </section>
+</aside>
+</div>
+
+<!-- 광고 자리 ③ 본문 중간 320×100 — 라벨지·내용·글자 카드가 다 끝난 자리에 둡니다(입력 중 광고 금지 조항).
+     버튼·입력칸에서 18px 이상 떼어 놓습니다. 모바일·PC 가 같은 자리라 단위 ID 하나면 됩니다 -->
+<div class="ad-slot" id="ad-mid"></div>
+
+<section class="card">
+  <h2><span>이럴 때 씁니다</span></h2>
+  <ul class="use">
+    <li><b>청첩장·송년 선물·거래처 우편물 주소 라벨</b>
+      <span class="d">엑셀 주소록을 통째로 복사해 붙여 넣으면 <b>우편번호·주소·이름</b> 열을 알아서 찾아 라벨마다 한 분씩 채웁니다.
+        이름 뒤에는 <code>귀하</code>·<code>님</code>·<code>앞</code>을 붙일 수 있고, 주소가 길면 그 라벨만 글자를 줄입니다.</span></li>
+    <li><b>아이 네임스티커·학용품 이름표</b>
+      <span class="d"><b>같은 내용 가득</b>에 이름을 적고 작은 칸 라벨지(예: <code>96칸 30×14mm</code>, <code>40칸 47×26.9mm</code>)를 고르면
+        한 장 전체가 같은 이름으로 채워집니다. 동그란 라벨(<code>원형 20칸 38mm</code>)도 됩니다.</span></li>
+    <li><b>보내는 사람·반품 주소 스티커</b>
+      <span class="d">가게 주소와 연락처를 한 번 적어 두고 한 장 가득 찍어 두면, 택배 상자마다 손으로 쓰지 않아도 됩니다.</span></li>
+    <li><b>파일 인덱스·서류함·물품 번호</b>
+      <span class="d"><b>목록</b>에 한 줄에 하나씩 적으면 칸마다 하나씩 들어갑니다. 여러 줄짜리 라벨은 빈 줄로 나누세요.</span></li>
+    <li><b>쓰다 남은 라벨지 이어 쓰기</b>
+      <span class="d">미리보기에서 <b>비어 있는 첫 칸</b>을 누르면 그 칸부터 인쇄합니다. 반쯤 쓴 라벨지를 버리지 않아도 됩니다.</span></li>
+  </ul>
+</section>
+
+<section class="card">
+  <h2><span>자주 묻는 것</span></h2>
+
+  <details>
+    <summary>주소록이 정말 서버로 안 올라가나요?</summary>
+    <p>올라가지 않습니다. 이 페이지에는 <b>데이터를 어디론가 보내는 코드가 없습니다.</b>
+      붙여 넣은 주소록과 연 엑셀 파일은 브라우저 안에서만 읽고, 인쇄 화면과 PDF도 브라우저가 직접 만듭니다.
+      주소록은 <b>저장해 두지도 않아서</b> 창을 닫으면 사라집니다(라벨지 종류·글자 크기 같은 설정만 기억합니다).
+      확인하고 싶으면 페이지를 연 뒤 <b>인터넷을 끄고</b> 써 보세요. 그대로 동작합니다.</p>
+  </details>
+
+  <details>
+    <summary>라벨 전용 프로그램을 설치하지 않아도 되나요?</summary>
+    <p>됩니다. 시중에서 흔히 파는 A4 라벨지의 <b>칸 배치(칸 크기·여백·간격) 60여 가지</b>를 미리 넣어 두어,
+      칸 수와 크기만 고르면 같은 자리에 글자를 찍습니다. 맥·크롬북·휴대폰처럼 전용 프로그램이 없는 기기에서도 됩니다.
+      다만 사진·바코드·그림을 넣는 꾸미기 기능은 없고, <b>글자 라벨</b>에 집중했습니다.</p>
+  </details>
+
+  <details>
+    <summary>인쇄했더니 글자가 칸에서 조금씩 밀려요</summary>
+    <p>세 가지를 차례로 보세요. ① 인쇄 창의 배율이 <b>100%(실제 크기)</b>인지 — 「용지에 맞춤」이면 전체가 줄어들어 아래쪽 칸으로 갈수록 더 어긋납니다.
+      ② 여백이 <b>없음</b>인지. ③ 그래도 전체가 한쪽으로 같은 만큼 밀리면 프린터의 급지 차이라서,
+      <b>인쇄 설정의 mm 보정</b>으로 반대 방향으로 옮기면 됩니다. 한 번 맞춘 값은 이 브라우저에 기억됩니다.
+      <b>칸 테두리만 시험 인쇄</b>를 일반 종이에 찍어 라벨지 뒤에 겹쳐 빛에 비춰 보면 어느 쪽으로 몇 mm인지 바로 보입니다.</p>
+  </details>
+
+  <details>
+    <summary>엑셀 파일을 바로 열 수 있나요?</summary>
+    <p><b>.xlsx</b>와 <b>.csv</b> 파일은 「엑셀·CSV 파일 열기」로 바로 엽니다(첫 번째 시트를 읽습니다).
+      오래된 <b>.xls</b> 파일은 엑셀에서 표를 복사해 붙여 넣거나, 「다른 이름으로 저장」에서 xlsx로 바꿔 주세요.
+      우편번호가 숫자로 저장돼 <b>앞자리 0이 빠진 경우</b>(1234)는 다섯 자리(01234)로 되돌려 넣습니다.</p>
+  </details>
+
+  <details>
+    <summary>주소가 두 칸(기본 주소 + 상세 주소)으로 나뉘어 있어요</summary>
+    <p>그대로 두면 됩니다. 「어느 열이 무엇인지」에서 <b>주소</b>와 <b>상세 주소</b>를 따로 고르면 한 줄로 이어 붙여 넣습니다.
+      회사명·직함 열이 있으면 이름 줄에 함께 넣고(예: ○○상사 김아무개 과장 귀하), 필요 없는 열은 「넣지 않음」으로 두세요.</p>
+  </details>
+
+  <details>
+    <summary>한글·워드의 라벨 기능과 무엇이 다른가요?</summary>
+    <p>한글·워드도 라벨 문서와 메일 머지(자료 합치기)가 되지만, 자료 파일을 연결하고 필드를 넣는 단계가 많습니다.
+      이 도구는 <b>붙여 넣기 한 번</b>으로 끝나고, 주소 길이에 따라 <b>라벨마다 글자 크기를 알아서</b> 맞춥니다.
+      반대로 표·그림을 섞은 복잡한 라벨은 한글·워드가 낫습니다.</p>
+  </details>
+
+  <details>
+    <summary>PDF로 저장하면 뭐가 좋은가요?</summary>
+    <p>라벨지 프린터가 다른 컴퓨터에 연결돼 있을 때, PDF를 옮겨서 거기서 인쇄하면 됩니다.
+      PDF를 열어 인쇄할 때도 <b>「실제 크기」</b>를 골라야 칸이 맞습니다(PDF 뷰어는 기본값이 「맞춤」인 경우가 많습니다).
+      PDF의 글자는 인쇄용 고해상도(약 300dpi) 그림으로 들어갑니다.</p>
+  </details>
+
+  <details>
+    <summary>네이버·카카오톡 앱에서 열었더니 인쇄가 안 돼요</summary>
+    <p>앱 안에서 열리는 화면(인앱 브라우저)은 <b>인쇄 창과 파일 내려받기가 막혀 있는 경우가 많습니다.</b>
+      그래서 앱 안에서 열면 안내 창이 먼저 뜹니다. <b>크롬에서 열기</b>(아이폰은 주소 복사 후 사파리)로 옮긴 다음 써 주세요.</p>
+  </details>
+</section>
+
+<!-- ══ 주의 문구 ══ -->
+<div class="nbx">
+  <div class="nbx-h"><span class="ic">!</span><span>인쇄하기 전에 확인하세요</span></div>
+  <ul>
+    <li><b>목록의 칸 배치는 시중 A4 라벨지에서 흔히 쓰는 치수를 모은 값입니다.</b> 같은 크기라도 만든 곳·생산 시기에 따라
+      여백이 조금 다를 수 있으니, 비싼 라벨지는 <b>일반 종이로 시험 인쇄</b>한 뒤 쓰세요.</li>
+    <li>프린터는 종이 가장자리 <b>3~5mm</b>에 인쇄하지 못하는 경우가 많아, 칸이 종이 끝에 붙은 라벨지(1칸·2칸 전지 등)는 가장자리 글자가 잘릴 수 있습니다.</li>
+    <li><b>주소록은 개인정보입니다.</b> 공용 PC에서 썼다면 붙여 넣은 내용을 지우고 창을 닫으세요.
+      남의 주소록을 동의 없이 모으거나 우편물 발송 목적 밖으로 쓰면 개인정보 보호법에 걸릴 수 있습니다.</li>
+    <li>레이저 프린터에 <b>잉크젯 전용</b> 라벨지를 넣으면 열에 들떠 프린터 안에서 벗겨질 수 있습니다. 포장에 적힌 전용 프린터를 확인하세요.</li>
+  </ul>
+  <p class="nbx-f">이 도구는 <b>있는 그대로 제공되며</b>, 인쇄 결과나 이를 사용해 발생한
+    어떠한 손해(라벨지·우편물·프린터 문제 포함)에 대해서도 <b>제작자와 운영자는 법적 책임을 지지 않습니다.</b></p>
+</div>
+
+<footer>
+  <b>라벨지 인쇄</b> · 업로드 없이 브라우저에서 처리<br>
+  시중 A4 라벨지 칸 배치 60여 종 · 외부 라이브러리 없음<br>
+  주소록은 어디에도 전송·저장되지 않으며, 페이지를 연 뒤에는 인터넷 없이도 동작합니다.
+</footer>
+</div>
+
+<!-- 앱 안(네이버·카카오톡 등)에서 열렸을 때 사용을 막는 창.
+     WebView 는 인쇄 창·파일 내려받기를 못 해서, 다 만들어도 인쇄가 안 된다 -->
+<div class="iamodal" id="iaModal" role="dialog" aria-modal="true" aria-labelledby="iaTitle">
+  <div class="iasheet">
+    <div class="iaic">📱</div>
+    <h2 id="iaTitle">앱 안에서는 라벨을 인쇄할 수 없습니다</h2>
+    <p class="iap" id="iaDesc"></p>
+    <ol class="iasteps" id="iaSteps"></ol>
+    <button class="iabtn" id="iaGo2" type="button">크롬에서 열기</button>
+    <p class="iafine"><button type="button" id="iaStay">인쇄는 안 해도 돼요 · 그냥 볼게요</button></p>
+  </div>
+</div>
+
+<!-- 광고 자리 ⑤ 하단 오버형 320×50(모바일) — 읽는 구간에서만 올라오고, 입력 중·미리보기 중·창이 열렸을 때는
+     내려가 있습니다. 바 높이만큼 본문 아래 여백을 늘려 아무것도 가리지 않습니다 -->
+<div id="anchor"><span class="amk">광고</span><div class="ad-slot" id="ad-anchor"></div>
+  <button class="axl" id="anchorX" type="button" aria-label="광고 닫기">✕</button></div>
+
+<div id="mbar"><div class="in"><div class="k">미리보기 · 인쇄<b id="mbarTxt">라벨</b></div><button class="go" id="mbarGo" type="button">미리보기 ↓</button></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="printArea"></div>
+<script>
+"use strict";
+/* ══════════════════════════════════════════════════════════════
+   라벨지 인쇄 — 라이브러리 없이 순수 JS
+
+   [규격]   시중 A4 라벨지의 칸 배치를 mm 로 적어 둔 표. 업체명·제품 번호는 싣지 않는다(칸 수·크기·여백으로만 고른다).
+            [용도, 가로, 세로, 행, 열, 위 여백, 왼쪽 여백, 가로 간격, 세로 간격, 모양(r/c)]
+   [배치]   라벨 한 칸의 글을 「줄 목록」으로 만들고(맞춤·크기 배율·굵기), 칸 안쪽 상자에 들어갈 때까지
+            글자 크기를 0.5pt 씩 줄여 가며 줄바꿈한다(layoutLabel). 결과(줄마다 글자·크기·위치 mm)를
+            캔버스 미리보기·PDF 와 인쇄용 DOM 이 똑같이 쓴다 — 줄바꿈은 캔버스 measureText 가 정하고
+            DOM 은 white-space:pre 로 그대로 찍으므로 화면과 종이가 어긋나지 않는다.
+   [인쇄]   #printArea 에 210×297mm 쪽을 만들고 @page{margin:0} 으로 찍는다. 글자가 그림이 아니라 글자 그대로 나간다.
+   [PDF]    쪽을 12px/mm(≈305dpi) 캔버스로 그려 JPEG 한 장씩 싣는다.
+   [엑셀]   xlsx 는 zip 을 직접 풀어(DecompressionStream) 첫 시트의 셀만 읽는다. CSV 는 UTF-8 → 안 되면 EUC-KR(CP949).
+   ══════════════════════════════════════════════════════════════ */
+/* 시중 A4 라벨지 칸 배치(mm) */
+const SPECS = [
+["물류·분류", 200.0, 289.05, 1, 1, 4.7, 5.4, 0.0, 0.0, "r"],
+["물류·분류", 200.0, 275.0, 1, 1, 8.0, 5.0, 0.0, 0.0, "r"],
+["물류·분류", 200.0, 143.51, 2, 1, 5.71, 5.4, 0.0, 0.0, "r"],
+["물류·분류", 200.0, 140.0, 2, 1, 7.0, 5.0, 0.0, 0.0, "r"],
+["물류·분류", 191.5, 91.0, 3, 1, 14.0, 9.25, 0.0, 0.0, "r"],
+["인덱스", 160.0, 60.0, 4, 1, 28.5, 25.0, 0.0, 0.0, "r"],
+["물류·분류", 99.1, 140.0, 2, 2, 8.0, 5.0, 2.0, 0.0, "r"],
+["물류·분류", 98.75, 138.95, 2, 2, 9.9, 5.0, 2.5, 0.0, "r"],
+["인덱스", 190.0, 50.0, 5, 1, 23.5, 10.0, 0.0, 0.0, "r"],
+["주소", 120.0, 43.0, 6, 1, 19.0, 45.0, 0.0, 0.0, "r"],
+["주소", 119.3, 42.8, 6, 1, 18.99, 45.0, 0.0, 0.0, "r"],
+["물류·분류", 99.1, 93.11, 3, 2, 7.0, 4.5, 2.5, 0.0, "r"],
+["물류·분류", 99.06, 93.12, 3, 2, 9.55, 5.08, 2.54, 0.0, "r"],
+["인덱스", 160.0, 38.0, 7, 1, 15.5, 25.0, 0.0, 0.0, "r"],
+["주소", 119.13, 33.75, 8, 1, 14.2, 45.85, 0.0, 0.0, "r"],
+["물류·분류", 99.1, 67.71, 4, 2, 13.0, 3.99, 2.5, 0.0, "r"],
+["주소", 99.06, 67.72, 4, 2, 13.79, 5.08, 2.54, 0.0, "r"],
+["물류·분류", 70.01, 71.88, 4, 2, 5.46, 18.39, 34.04, 0.0, "r"],
+["인덱스", 48.0, 130.0, 2, 4, 15.0, 9.0, 0.0, 7.0, "r"],
+["인덱스", 150.0, 27.9, 9, 1, 23.0, 30.0, 0.0, 0.0, "r"],
+["인덱스", 150.0, 28.0, 9, 1, 25.0, 30.0, 0.0, 0.0, "r"],
+["명함", 90.1, 54.2, 5, 2, 14.0, 16.0, 0.0, 0.0, "r"],
+["명함", 90.1, 50.19, 5, 2, 23.5, 15.0, 0.0, 0.0, "r"],
+["명함", 88.9, 52.0, 5, 2, 17.5, 11.9, 8.49, 0.0, "r"],
+["주소", 88.9, 51.99, 5, 2, 20.5, 11.5, 9.14, 0.0, "r"],
+["주소", 100.0, 46.4, 6, 2, 7.5, 4.0, 2.5, 0.0, "r"],
+["물류·분류", 63.5, 71.98, 4, 3, 5.26, 7.62, 2.54, 0.0, "r"],
+["물류·분류", 63.5, 70.01, 4, 3, 7.9, 7.0, 2.5, 0.0, "r"],
+["원형", 63.01, 63.01, 4, 3, 15.0, 5.0, 5.09, 4.7, "c"],
+["원형", 62.95, 62.95, 4, 3, 15.0, 6.5, 4.0, 4.66, "c"],
+["주소", 99.1, 38.1, 7, 2, 13.8, 5.0, 2.5, 0.0, "r"],
+["주소", 99.06, 38.1, 7, 2, 15.88, 5.08, 2.54, 0.0, "r"],
+["주소", 99.1, 33.89, 8, 2, 14.2, 4.7, 2.5, 0.0, "r"],
+["주소", 100.0, 29.9, 9, 2, 13.5, 3.7, 2.5, 0.0, "r"],
+["주소", 63.5, 46.55, 6, 3, 9.55, 7.62, 2.54, 0.0, "r"],
+["인덱스", 84.0, 28.0, 10, 2, 8.0, 18.5, 5.0, 0.0, "r"],
+["원형", 38.0, 38.0, 5, 4, 28.0, 22.25, 4.5, 12.7, "c"],
+["주소", 63.5, 38.1, 7, 3, 15.8, 8.0, 2.5, 0.0, "r"],
+["인덱스", 134.0, 11.0, 24, 1, 16.94, 38.4, 0.0, 0.0, "r"],
+["주소", 64.0, 33.89, 8, 3, 12.5, 6.5, 2.5, 0.0, "r"],
+["바코드·소형", 62.7, 30.1, 9, 3, 11.01, 8.0, 2.5, 0.0, "r"],
+["바코드·소형", 62.69, 30.09, 9, 3, 10.79, 8.7, 2.29, 0.0, "r"],
+["인덱스", 87.0, 17.0, 15, 2, 21.59, 11.27, 13.46, 0.0, "r"],
+["인덱스", 12.0, 130.0, 2, 15, 15.0, 15.0, 0.0, 7.0, "r"],
+["인덱스", 62.0, 24.0, 11, 3, 15.0, 8.5, 3.0, 0.0, "r"],
+["인덱스", 95.0, 14.0, 18, 2, 22.5, 9.0, 2.0, 0.0, "r"],
+["바코드·소형", 47.0, 26.9, 10, 4, 14.2, 7.0, 2.5, 0.0, "r"],
+["바코드·소형", 45.7, 21.2, 12, 4, 21.41, 9.75, 2.54, 0.0, "r"],
+["인덱스", 62.7, 15.0, 18, 3, 11.0, 8.4, 2.5, 0.0, "r"],
+["분류", 26.01, 29.51, 9, 6, 7.0, 17.0, 3.99, 2.0, "r"],
+["분류", 25.66, 29.36, 9, 6, 7.0, 18.5, 3.8, 2.0, "r"],
+["인덱스", 26.0, 34.61, 8, 7, 10.0, 4.99, 2.99, 0.0, "r"],
+["바코드·소형", 37.9, 19.21, 12, 5, 23.8, 6.0, 2.0, 2.0, "r"],
+["바코드·소형", 38.1, 21.2, 13, 5, 10.7, 4.6, 2.54, 0.0, "r"],
+["바코드·소형", 38.1, 21.08, 13, 5, 12.19, 5.08, 2.54, 0.0, "r"],
+["인덱스", 55.0, 10.0, 27, 3, 12.0, 15.0, 8.0, 0.0, "r"],
+["인덱스", 46.0, 11.0, 21, 4, 16.5, 6.1, 4.6, 1.56, "r"],
+["이름표", 30.0, 14.0, 16, 6, 21.5, 10.0, 2.0, 2.0, "r"],
+["인덱스", 32.0, 8.0, 24, 5, 17.49, 19.99, 2.99, 2.99, "r"],
+["인덱스", 46.0, 8.0, 34, 4, 10.0, 8.5, 3.0, 0.0, "r"],
+["인덱스", 30.0, 9.0, 29, 5, 18.0, 20.0, 5.0, 0.0, "r"],
+["인덱스", 25.4, 10.0, 27, 7, 12.0, 8.2, 2.5, 0.0, "r"],
+["인덱스", 20.0, 10.0, 27, 8, 13.0, 14.5, 3.0, 0.0, "r"]
+];
+const $ = s => document.querySelector(s);
+const PT_MM = 25.4 / 72;           /* 1pt = 0.3528mm */
+const PDF_PPM = 12;                /* PDF 해상도 — mm 당 12px ≒ 305dpi */
+const LH = 1.3;                    /* 줄 높이(글자 크기 배) */
+const MIN_PT = 5;
+const FONTS = {
+  sans: '"Malgun Gothic","맑은 고딕","Apple SD Gothic Neo","Noto Sans KR","Noto Sans CJK KR",sans-serif',
+  serif: '"Batang","바탕","BatangChe","AppleMyungjo","Noto Serif KR","Noto Serif CJK KR",serif'
+};
+const PAGE = { w: 210, h: 297 };
+
+function toast(msg, ms) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), ms || 2400);
+}
+const sleep0 = () => new Promise(r => setTimeout(r, 0));
+function fmtSize(b) { return b < 1024 ? b + 'B' : b < 1048576 ? (b / 1024).toFixed(0) + 'KB' : (b / 1048576).toFixed(1) + 'MB'; }
+const r1 = x => Math.round(x * 10) / 10;
+const fmm = x => String(r1(x));
+
+/* ── 규격 ── */
+const SPEC_LIST = SPECS.map(a => ({
+  key: 'L' + a[1] + 'x' + a[2] + '-' + a[3] + 'x' + a[4] + '-' + a[5], use: a[0],
+  w: a[1], h: a[2], rows: a[3], cols: a[4], top: a[5], left: a[6], hg: a[7], vg: a[8], circle: a[9] === 'c'
+}));
+/* 크기·칸 수가 같은 라벨지가 둘 이상이면 위 여백으로 구분해 보여 준다 */
+for (const s of SPEC_LIST) s.twin = SPEC_LIST.some(o => o !== s && o.rows * o.cols === s.rows * s.cols && Math.abs(o.w - s.w) < 0.35 && Math.abs(o.h - s.h) < 0.35);
+function findSpec(w, h, n, top) {
+  const c = SPEC_LIST.filter(s => s.rows * s.cols === n && Math.abs(s.w - w) < 0.35 && Math.abs(s.h - h) < 0.35);
+  return (top === undefined ? c[0] : c.find(s => Math.abs(s.top - top) < 0.3)) || null;
+}
+/* 자주 쓰는 배치 — 단추로 올려 둔다 */
+const POPULAR = [[99.1, 38.1, 14, 13.8], [99.1, 33.89, 16], [63.5, 38.1, 21], [64, 33.89, 24], [99.1, 67.71, 8, 13], [47, 26.9, 40], [30, 14, 96], [38, 38, 20]]
+  .map(a => findSpec(a[0], a[1], a[2], a[3])).filter(Boolean).map(s => s.key);
+function specByKey(k) { return SPEC_LIST.find(s => s.key === k); }
+
+/* ── 설정(기억하는 것) · 내용(기억하지 않는 것) ── */
+const OPT0 = {
+  spec: '',
+  custom: { w: 99.1, h: 38.1, rows: 7, cols: 2, top: 13.8, left: 5, hg: 2.5, vg: 0, circle: false },
+  mode: 'addr', font: 'sans', size: { addr: 11, same: 16, list: 14 }, align: { addr: 'left', same: 'center', list: 'center' },
+  bold: { same: true, list: false }, honor: '귀하', copies: 1, copiesL: 1, zip: true, tel: false,
+  sheets: 1, split: 'line', offX: 0, offY: 0, guide: false
+};
+OPT0.spec = POPULAR[0];
+let opt = JSON.parse(JSON.stringify(OPT0));
+function loadOpt() {
+  try {
+    const o = JSON.parse(localStorage.getItem('label_print.opt') || 'null');
+    if (o && typeof o === 'object') for (const k in OPT0) if (k in o && typeof o[k] === typeof OPT0[k]) opt[k] = o[k];
+    for (const k of ['custom', 'size', 'align', 'bold']) opt[k] = Object.assign({}, OPT0[k], opt[k]);
+    if (opt.spec !== 'custom' && !specByKey(opt.spec)) opt.spec = POPULAR[0];
+    if (!['addr', 'same', 'list'].includes(opt.mode)) opt.mode = 'addr';
+    if (!['귀하', '님', '앞', '좌하', '귀중', ''].includes(opt.honor)) opt.honor = '귀하';
+  } catch (e) { /* 무시 */ }
+}
+function saveOpt() { try { localStorage.setItem('label_print.opt', JSON.stringify(opt)); } catch (e) { /* 무시 */ } }
+
+let startCell = 0;       /* 첫 장에서 몇 번째 칸부터(0부터) — 새로 열면 다시 1번 칸 */
+let curPage = 0;
+let busy = false;
+
+function curSpec() {
+  if (opt.spec === 'custom') {
+    const c = opt.custom;
+    return { key: 'custom', use: '직접 입력', w: +c.w || 10, h: +c.h || 10, rows: Math.max(1, Math.round(+c.rows || 1)),
+      cols: Math.max(1, Math.round(+c.cols || 1)), top: +c.top || 0, left: +c.left || 0, hg: +c.hg || 0, vg: +c.vg || 0, circle: !!c.circle };
+  }
+  return specByKey(opt.spec) || SPEC_LIST[0];
+}
+function perPage(sp) { return sp.rows * sp.cols; }
+function cellRect(sp, i) {
+  const r = Math.floor(i / sp.cols), c = i % sp.cols;
+  return { x: sp.left + c * (sp.w + sp.hg), y: sp.top + r * (sp.h + sp.vg), w: sp.w, h: sp.h };
+}
+function specFit(sp) {
+  const right = PAGE.w - sp.left - sp.cols * sp.w - (sp.cols - 1) * sp.hg;
+  const bottom = PAGE.h - sp.top - sp.rows * sp.h - (sp.rows - 1) * sp.vg;
+  return { right, bottom, ok: right > -0.3 && bottom > -0.3 };
+}
+function specName(s) { return perPage(s) + '칸 · ' + (s.circle ? '원형 지름 ' + fmm(s.w) : fmm(s.w) + '×' + fmm(s.h)) + 'mm'; }
+function specLabel(s) { return specName(s) + (s.twin ? ' · 위 여백 ' + fmm(s.top) + 'mm' : '') + ' · ' + s.use; }
+
+/* ══ 표(주소록) 읽기 ══ */
+/* 엑셀 복사본(TSV)·CSV — 따옴표 안의 줄바꿈·구분자를 지킨다 */
+function parseDelim(text, sep) {
+  const rows = [];
+  let row = [], cell = '', q = false, i = 0;
+  const n = text.length;
+  while (i < n) {
+    const ch = text[i];
+    if (q) {
+      if (ch === '"') { if (text[i + 1] === '"') { cell += '"'; i += 2; continue; } q = false; i++; continue; }
+      cell += ch; i++; continue;
+    }
+    if (ch === '"' && cell === '') { q = true; i++; continue; }
+    if (ch === sep) { row.push(cell); cell = ''; i++; continue; }
+    if (ch === '\r') { i++; continue; }
+    if (ch === '\n') { row.push(cell); rows.push(row); row = []; cell = ''; i++; continue; }
+    cell += ch; i++;
+  }
+  if (cell !== '' || row.length) { row.push(cell); rows.push(row); }
+  return rows.map(r => r.map(c => c.replace(/\s+/g, ' ').trim())).filter(r => r.some(c => c));
+}
+function parseTable(text) {
+  text = String(text || '');
+  if (!text.trim()) return [];
+  const lines = text.split(/\n/).slice(0, 30);
+  const tabs = lines.filter(l => l.includes('\t')).length;
+  const commas = lines.filter(l => l.includes(',')).length;
+  if (tabs) return parseDelim(text, '\t');
+  /* 쉼표만 있으면 CSV 로 — 다만 주소에 쉼표가 흔하므로 줄마다 열 수가 같을 때만 */
+  if (commas >= Math.max(2, lines.length * 0.8)) {
+    const rows = parseDelim(text, ',');
+    const cnt = rows.slice(0, 20).map(r => r.length);
+    if (cnt.length && cnt.every(c => c === cnt[0]) && cnt[0] >= 2) return rows;
+  }
+  /* 칸 나눔 없이 붙여 넣은 글 — 두 칸 이상 공백으로 나눈 모양이면 그걸로 */
+  const sp2 = lines.filter(l => / {2,}/.test(l.trim())).length;
+  if (sp2 >= Math.max(2, lines.length * 0.8)) return text.split(/\n/).map(l => l.trim().split(/ {2,}/)).filter(r => r.some(c => c));
+  return text.split(/\n/).map(l => [l.trim()]).filter(r => r[0]);
+}
+
+const ROLES = [
+  { k: 'zip', name: '우편번호', re: /우편|^zip|post/i },
+  { k: 'addr', name: '주소', re: /^(도로명|지번|기본|받는\s*분?\s*|수취인?\s*|배송지?\s*)?주소1?$|^address/i },
+  { k: 'addr2', name: '상세 주소', re: /상세|주소\s*2|나머지|동\s*호수|address\s*2/i },
+  { k: 'name', name: '받는 분', re: /이름|성명|성함|받는\s*(분|사람|이)|수취인|수령인|수신인|고객명|회원명|^name|대표자/i },
+  { k: 'org', name: '회사·소속', re: /회사|상호|업체|소속|기관|단체|부서|직장|학교/i },
+  { k: 'title', name: '직함', re: /직함|직위|직급|직책|^title/i },
+  { k: 'tel', name: '연락처', re: /전화|연락처|휴대|핸드폰|폰|tel|phone|mobile/i }
+];
+const RX = {
+  zip: /^\d{5}$|^\d{3}-\d{3}$/,
+  addr: /(특별시|광역시|특별자치|[가-힣]+(도|시))\s*[가-힣]*\s*.*(로|길|동|읍|면|리|가)\s*\d*|○○/,
+  tel: /^0\d{1,2}[-\s)]?\d{3,4}[-\s]?\d{4}$|^1[5-9]\d{2}-?\d{4}$/,
+  name: /^[가-힣]{2,4}$/
+};
+let table = { rows: [], head: false, map: {}, auto: true, sig: '' };
+
+function guessMap(rows, head) {
+  const map = {};
+  const nCol = Math.max(0, ...rows.slice(0, 50).map(r => r.length));
+  if (head && rows[0]) {
+    rows[0].forEach((h, ci) => {
+      for (const R of ROLES) {
+        if (map[R.k] !== undefined) continue;
+        if (R.re.test(h.replace(/\s/g, '')) || R.re.test(h)) {
+          /* 「주소」 한 칸이 상세 주소보다 먼저 잡히게 */
+          if (R.k === 'addr' && /상세|2|나머지/.test(h)) continue;
+          map[R.k] = ci; break;
+        }
+      }
+    });
+    /* 머리글에 「주소」만 두 번 나오면 두 번째를 상세 주소로 */
+    if (map.addr !== undefined && map.addr2 === undefined) {
+      const j = rows[0].findIndex((h, ci) => ci > map.addr && /주소/.test(h) && !Object.values(map).includes(ci));
+      if (j >= 0) map.addr2 = j;
+    }
+  }
+  const body = rows.slice(head ? 1 : 0, 60);
+  const score = (ci, re) => body.filter(r => re.test((r[ci] || '').trim())).length / Math.max(1, body.filter(r => (r[ci] || '').trim()).length);
+  const used = () => new Set(Object.values(map));
+  for (const k of ['zip', 'tel', 'addr', 'name']) {
+    if (map[k] !== undefined) continue;
+    let best = -1, bs = 0.5;
+    for (let ci = 0; ci < nCol; ci++) {
+      if (used().has(ci)) continue;
+      const s = score(ci, RX[k]);
+      if (s > bs) { bs = s; best = ci; }
+    }
+    if (best >= 0) map[k] = best;
+  }
+  /* 주소 바로 오른쪽 열이 동·호수 모양이면 상세 주소 */
+  if (map.addr !== undefined && map.addr2 === undefined && map.addr + 1 < nCol && !used().has(map.addr + 1)) {
+    const s = score(map.addr + 1, /\d+\s*(동|호|층)|\(.*\)|^\d+-\d+$|아파트|빌라|오피스텔/);
+    if (s > 0.4) map.addr2 = map.addr + 1;
+  }
+  /* 한 열뿐인 목록 — 이름으로 본다 */
+  if (nCol === 1 && map.name === undefined && map.addr === undefined) map.name = 0;
+  return map;
+}
+function looksHead(rows) {
+  if (rows.length < 2) return false;
+  const r0 = rows[0];
+  let hit = 0;
+  for (const h of r0) if (ROLES.some(R => R.re.test(h.replace(/\s/g, '')) || R.re.test(h))) hit++;
+  if (hit >= 1 && r0.every(h => h.length <= 14)) return true;
+  return false;
+}
+function refreshTable() {
+  const txt = $('#taAddr').value;
+  const rows = parseTable(txt);
+  const sig = rows.length + ':' + (rows[0] || []).join('\u0001');
+  if (sig !== table.sig) {
+    const head = looksHead(rows);
+    table = { rows, head, map: guessMap(rows, head), auto: true, sig };
+  } else table.rows = rows;
+  buildMaps();
+}
+function fixCell(k, v) {
+  v = String(v == null ? '' : v).trim();
+  if (k === 'zip' && /^\d{4}$/.test(v)) v = '0' + v;          /* 숫자로 저장돼 앞자리 0 이 빠진 우편번호 */
+  if (k === 'tel' && /^1\d{8,9}$/.test(v)) v = '0' + v;       /* 010… 이 숫자가 되어 0 이 빠진 번호 */
+  if (k === 'tel' && /^01\d{8,9}$/.test(v)) v = v.replace(/^(01\d)(\d{3,4})(\d{4})$/, '$1-$2-$3');
+  return v;
+}
+function addrRecords() {
+  const rows = table.head ? table.rows.slice(1) : table.rows;
+  const m = table.map;
+  const get = (r, k) => m[k] === undefined || m[k] < 0 ? '' : fixCell(k, r[m[k]]);
+  const out = [];
+  for (const r of rows) {
+    const rec = {};
+    for (const R of ROLES) rec[R.k] = get(r, R.k);
+    if (!Object.values(rec).some(v => v)) continue;
+    out.push(rec);
+  }
+  return out;
+}
+function buildMaps() {
+  const box = $('#maps');
+  const has = table.rows.length > 0;
+  $('#mapBox').classList.toggle('hide', !has);
+  $('#hasHead').checked = table.head;
+  if (!has) { box.innerHTML = ''; return; }
+  const nCol = Math.max(...table.rows.slice(0, 50).map(r => r.length));
+  const sample = table.rows[table.head ? 1 : 0] || [];
+  const colName = ci => {
+    const h = table.head ? (table.rows[0][ci] || '') : '';
+    const s = sample[ci] || '';
+    const t = (h ? h + ' — ' : '') + s;
+    return (ci + 1) + '열' + (t ? ' · ' + (t.length > 22 ? t.slice(0, 21) + '…' : t) : '');
+  };
+  let html = '';
+  for (const R of ROLES) {
+    const cur = table.map[R.k];
+    let o = '<option value="-1">넣지 않음</option>';
+    for (let ci = 0; ci < nCol; ci++) o += '<option value="' + ci + '"' + (cur === ci ? ' selected' : '') + '>' + escH(colName(ci)) + '</option>';
+    html += '<label class="map"><span>' + R.name + '</span><select data-role="' + R.k + '" class="' + (cur === undefined || cur < 0 ? 'unset' : '') + '">' + o + '</select></label>';
+  }
+  box.innerHTML = html;
+}
+const escH = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+/* ── 파일 열기: xlsx(zip 직접 풀기) · csv · txt ── */
+async function inflateRaw(u8) {
+  if (typeof DecompressionStream !== 'function') throw new Error('이 브라우저는 xlsx 를 바로 못 엽니다. 엑셀에서 표를 복사해 붙여 넣어 주세요');
+  const ds = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(ds).arrayBuffer());
+}
+async function unzip(buf) {
+  const u8 = new Uint8Array(buf), dv = new DataView(buf);
+  let e = -1;
+  for (let i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { e = i; break; }
+  if (e < 0) throw new Error('엑셀(xlsx) 파일이 아닙니다');
+  const cnt = dv.getUint16(e + 10, true);
+  let p = dv.getUint32(e + 16, true);
+  const files = {};
+  const td = new TextDecoder();
+  for (let k = 0; k < cnt; k++) {
+    if (dv.getUint32(p, true) !== 0x02014b50) break;
+    const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true);
+    const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true);
+    const loc = dv.getUint32(p + 42, true);
+    const name = td.decode(u8.subarray(p + 46, p + 46 + nlen));
+    files[name] = { method, csize, loc };
+    p += 46 + nlen + xlen + clen;
+  }
+  return async name => {
+    const f = files[name];
+    if (!f) return null;
+    const ln = dv.getUint16(f.loc + 26, true), lx = dv.getUint16(f.loc + 28, true);
+    const data = u8.subarray(f.loc + 30 + ln + lx, f.loc + 30 + ln + lx + f.csize);
+    const raw = f.method === 0 ? data : await inflateRaw(data);
+    return td.decode(raw);
+  };
+}
+function colIdx(ref) { let n = 0; for (const ch of ref.replace(/\d+$/, '')) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; }
+async function readXlsx(buf) {
+  const get = await unzip(buf);
+  const dp = new DOMParser();
+  const xml = s => dp.parseFromString(s, 'application/xml');
+  const kids = (el, tag) => [...el.getElementsByTagName('*')].filter(x => x.localName === tag);
+  const sstTxt = await get('xl/sharedStrings.xml');
+  const sst = sstTxt ? kids(xml(sstTxt).documentElement, 'si').map(si => kids(si, 't').filter(t => !t.closest || !kids(si, 'rPh').some(ph => ph.contains(t))).map(t => t.textContent).join('')) : [];
+  /* 첫 시트 경로: workbook.xml 의 첫 sheet → rels */
+  let path = 'xl/worksheets/sheet1.xml', sname = '';
+  const wb = await get('xl/workbook.xml'), rels = await get('xl/_rels/workbook.xml.rels');
+  if (wb && rels) {
+    const sh = kids(xml(wb).documentElement, 'sheet');
+    if (sh.length) {
+      sname = sh[0].getAttribute('name') || '';
+      const rid = sh[0].getAttribute('r:id') || [...sh[0].attributes].find(a => a.localName === 'id').value;
+      const rel = kids(xml(rels).documentElement, 'Relationship').find(r => r.getAttribute('Id') === rid);
+      if (rel) { const t = rel.getAttribute('Target'); path = t.startsWith('/') ? t.slice(1) : 'xl/' + t.replace(/^\.\//, ''); }
+      if (sh.length > 1) toast('시트가 ' + sh.length + '개입니다 · 첫 시트 「' + sname + '」를 읽었습니다(다른 시트는 복사해 붙여 넣으세요)', 5200);
+    }
+  }
+  const s = await get(path);
+  if (!s) throw new Error('시트를 찾지 못했습니다');
+  const doc = xml(s).documentElement;
+  const rows = [];
+  for (const row of kids(doc, 'row')) {
+    const r = [];
+    for (const c of kids(row, 'c')) {
+      const ci = colIdx(c.getAttribute('r') || 'A1');
+      const t = c.getAttribute('t');
+      const v = kids(c, 'v')[0];
+      let val = '';
+      if (t === 's') val = sst[+(v ? v.textContent : 0)] || '';
+      else if (t === 'inlineStr') val = kids(c, 't').map(x => x.textContent).join('');
+      else if (v) { val = v.textContent; if (!t && /^-?\d+\.\d{7,}$/.test(val)) val = String(+(+val).toFixed(6)); }
+      r[ci] = val;
+    }
+    rows.push(r);
+  }
+  return rows.map(r => Array.from(r, x => x == null ? '' : String(x)));
+}
+function rowsToTsv(rows) {
+  return rows.filter(r => r.some(c => String(c).trim())).map(r => r.map(c => {
+    c = String(c).replace(/\r?\n/g, ' ');
+    return /[\t"]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c;
+  }).join('\t')).join('\n');
+}
+async function openFile(f) {
+  if (!f) return;
+  try {
+    const buf = await f.arrayBuffer();
+    const u8 = new Uint8Array(buf);
+    let text;
+    if (u8[0] === 0x50 && u8[1] === 0x4b) text = rowsToTsv(await readXlsx(buf));
+    else if (u8[0] === 0xd0 && u8[1] === 0xcf) throw new Error('예전 엑셀(.xls) 파일은 열 수 없습니다 · 엑셀에서 표를 복사해 붙여 넣거나 xlsx 로 저장해 주세요');
+    else {
+      try { text = new TextDecoder('utf-8', { fatal: true }).decode(u8); }
+      catch (e) { text = new TextDecoder('euc-kr').decode(u8); }   /* 한국어 윈도우 엑셀이 만든 CSV */
+      text = text.replace(/^\uFEFF/, '');
+      if (!text.includes('\t') && /\.csv$/i.test(f.name)) text = rowsToTsv(parseDelim(text, ','));
+    }
+    $('#taAddr').value = text;
+    table.sig = '';
+    refreshTable(); update();
+    const n = addrRecords().length;
+    toast('「' + f.name + '」 · ' + n + '명을 읽었습니다', 3000);
+  } catch (e) {
+    toast(e && e.message ? e.message : '파일을 읽지 못했습니다', 5200);
+  }
+}
+
+/* ══ 라벨 내용 → 줄 목록 ══ */
+function labelsFromData() {
+  const out = [];
+  if (opt.mode === 'addr') {
+    const rec = addrRecords();
+    const A = opt.align.addr;
+    for (const r of rec) {
+      const lines = [];
+      if (opt.zip && r.zip) lines.push({ t: r.zip, rel: 0.82, a: A === 'center' ? 'center' : 'left' });
+      const ad = [r.addr, r.addr2].filter(Boolean).join(' ');
+      if (ad) lines.push({ t: ad, rel: 1, a: A === 'center' ? 'center' : 'left' });
+      const who = [r.org, r.name, r.title].filter(Boolean).join(' ');
+      if (who && lines.length) lines.push({ t: '', rel: 0.6, gap: true, a: 'left' });   /* 주소와 받는 분 사이를 조금 띄운다 */
+      if (who) lines.push({ t: who + (opt.honor ? ' ' + opt.honor : ''), rel: 1.25, b: true, a: A === 'center' ? 'center' : 'right' });
+      if (opt.tel && r.tel) lines.push({ t: r.tel, rel: 0.85, a: A === 'center' ? 'center' : 'right' });
+      if (!lines.length) continue;
+      for (let c = 0; c < opt.copies; c++) out.push(lines);
+    }
+  } else if (opt.mode === 'same') {
+    const lines = mkLines($('#taSame').value, 'same');
+    if (lines.length) {
+      const sp = curSpec(), n = perPage(sp) * opt.sheets - startCell;
+      for (let i = 0; i < n; i++) out.push(lines);
+    }
+  } else {
+    const v = $('#taList').value.replace(/\r/g, '');
+    const blocks = opt.split === 'block' ? v.split(/\n\s*\n/) : v.split('\n');
+    for (const bl of blocks) {
+      const lines = mkLines(bl, 'list');
+      if (!lines.length) continue;
+      for (let c = 0; c < opt.copiesL; c++) out.push(lines);
+    }
+  }
+  return out;
+}
+function mkLines(text, mode) {
+  const ls = String(text || '').replace(/\r/g, '').split('\n').map(s => s.replace(/\s+$/, ''));
+  while (ls.length && !ls[0].trim()) ls.shift();
+  while (ls.length && !ls[ls.length - 1].trim()) ls.pop();
+  const A = opt.align[mode];
+  return ls.map((t, i) => ({ t: t.trim(), rel: i === 0 && opt.bold[mode] && ls.length > 1 ? 1.35 : 1, b: i === 0 && opt.bold[mode], a: A, gap: !t.trim() }));
+}
+
+/* ══ 글자 맞추기 ══ */
+const mctx = document.createElement('canvas').getContext('2d');
+const mcache = new Map();
+function textW(t, bold) {        /* 100px 기준 너비(px) — 크기에 비례하므로 한 번만 잰다 */
+  const k = opt.font + (bold ? 'B' : 'N') + t;
+  let w = mcache.get(k);
+  if (w === undefined) {
+    mctx.font = (bold ? '700 ' : '400 ') + '100px ' + FONTS[opt.font];
+    w = mctx.measureText(t).width;
+    if (mcache.size > 20000) mcache.clear();
+    mcache.set(k, w);
+  }
+  return w;
+}
+function wrapLine(t, maxW, sizeMm, bold, wordsOnly) {
+  const W = s => textW(s, bold) / 100 * sizeMm;
+  if (W(t) <= maxW) return [t];
+  const words = t.split(/(\s+)/).filter(x => x !== '');
+  const out = [];
+  let cur = '';
+  const pushLong = w => {     /* 한 낱말이 칸보다 길면 글자 단위로 자른다 */
+    let s = '';
+    for (const ch of w) { if (s && W(s + ch) > maxW) { out.push(s); s = ch; } else s += ch; }
+    return s;
+  };
+  for (const w of words) {
+    if (/^\s+$/.test(w)) { if (cur) cur += w; continue; }
+    const tryS = cur + w;
+    if (W(tryS) <= maxW) { cur = tryS; continue; }
+    if (cur.trim()) out.push(cur.trim());
+    cur = W(w) > maxW && !wordsOnly ? pushLong(w) : w;
+  }
+  if (cur.trim()) out.push(cur.trim());
+  return out;
+}
+function innerBox(sp) {
+  if (sp.circle) {
+    const d = Math.min(sp.w, sp.h), k = 0.74;
+    return { dx: (sp.w - d * k) / 2, dy: (sp.h - d * k) / 2, w: d * k, h: d * k };
+  }
+  const px = Math.min(5, Math.max(1.2, Math.min(sp.w, sp.h) * 0.07));
+  const py = Math.min(4, Math.max(0.8, sp.h * 0.07));
+  return { dx: px, dy: py, w: sp.w - 2 * px, h: sp.h - 2 * py };
+}
+/* 인쇄(DOM)와 같은 기준선 — CSS 는 줄 높이 안에 글꼴의 ascent+descent 상자를 가운데 두고
+   그 위쪽에서 ascent 만큼 내려온 곳에 글자를 앉힌다. em 상자 가운데(textBaseline:middle)와는
+   맑은 고딕에서 0.1em 가까이 차이가 나서, 캔버스도 같은 공식으로 맞춘다 */
+const fmet = {};
+function fontMet(bold) {
+  const k = opt.font + (bold ? 'B' : 'N');
+  if (!fmet[k]) {
+    mctx.font = (bold ? '700 ' : '400 ') + '100px ' + FONTS[opt.font];
+    const m = mctx.measureText('가Ag');
+    const a = m.fontBoundingBoxAscent, d = m.fontBoundingBoxDescent;
+    fmet[k] = isFinite(a) && isFinite(d) && a > 0 ? { a: a / 100, d: d / 100 } : { a: 0.88, d: 0.24 };
+  }
+  return fmet[k];
+}
+function baseY(L) { const m = fontMet(L.b); return L.y + (L.lh - (m.a + m.d) * L.sz) / 2 + m.a * L.sz; }
+const layCache = new Map();
+function layoutLabel(lines, sp, maxPt) {
+  const key = opt.font + opt.mode + '|' + sp.w + 'x' + sp.h + (sp.circle ? 'c' : '') + '|' + maxPt + '|' + JSON.stringify(lines);
+  const hit = layCache.get(key);
+  if (hit) return hit;
+  const box = innerBox(sp);
+  /* wm: 'none' 줄바꿈 없음 · 'word' 띄어쓰기에서만 · 'char' 낱말 중간도 */
+  const tryFit = (pt, wm) => {
+    const out = [];
+    let tot = 0, wide = false;
+    for (const L of lines) {
+      const sz = pt * L.rel * PT_MM;          /* 글자 크기 mm */
+      if (L.gap) { out.push({ t: '', sz, b: false, a: L.a }); tot += sz * LH * 0.6; continue; }
+      const parts = wm === 'none' || L.nw ? [L.t] : wrapLine(L.t, box.w, sz, L.b, wm === 'word');
+      for (const p of parts) {
+        if (textW(p, L.b) / 100 * sz > box.w + 0.01) wide = true;
+        out.push({ t: p, sz, b: !!L.b, a: L.a });
+        tot += sz * LH;
+      }
+    }
+    return { out, tot, ok: tot <= box.h + 0.01 && !wide };
+  };
+  let res = null, pt = maxPt;
+  const best = wm => { for (let p = maxPt; p >= MIN_PT; p -= 0.5) { const r = tryFit(p, wm); if (r.ok) return { r, p }; } return null; };
+  /* 먼저 띄어쓰기 자리에서만 줄을 바꿔 본다. 이름표·목록은 줄이 늘어났을 때 한 줄 그대로(조금 작게)와 견줘
+     한 줄 크기가 80% 이상이면 한 줄을 고른다. 낱말 중간 자르기는 둘 다 안 될 때만 */
+  let cand = best('word');
+  if (opt.mode !== 'addr' && (!cand || cand.r.out.length > lines.length)) {
+    const one = best('none');
+    if (one && (!cand || one.p >= cand.p * 0.8)) cand = one;
+  }
+  if (!cand) cand = best('char');
+  if (cand) { res = cand.r; pt = cand.p; }
+  if (!res || !res.ok) { pt = MIN_PT; res = tryFit(MIN_PT, 'char'); }
+  /* 세로 가운데 */
+  let y = box.dy + Math.max(0, (box.h - res.tot) / 2);
+  const placed = res.out.map(l => {
+    const lh = l.t === '' ? l.sz * LH * 0.6 : l.sz * LH;
+    const o = { t: l.t, sz: l.sz, b: l.b, a: l.a, x: box.dx, w: box.w, y, lh };
+    y += lh;
+    return o;
+  });
+  const r = { lines: placed, pt, over: !res.ok, shrunk: pt < maxPt };
+  if (layCache.size > 5000) layCache.clear();
+  layCache.set(key, r);
+  return r;
+}
+
+/* ══ 쪽 배치 ══ */
+let model = null;
+function buildModel() {
+  const sp = curSpec(), pp = perPage(sp);
+  if (startCell >= pp) startCell = 0;
+  const labels = labelsFromData();
+  const maxPt = opt.size[opt.mode];
+  const items = labels.map(lines => layoutLabel(lines, sp, maxPt));
+  const total = items.length;
+  const nPages = Math.max(1, Math.ceil((startCell + total) / pp));
+  model = { sp, pp, items, nPages, over: items.filter(i => i.over).length, shrunk: items.filter(i => i.shrunk).length };
+  if (curPage >= nPages) curPage = nPages - 1;
+  return model;
+}
+/* 쪽 k 의 칸 i 에 들어갈 라벨(없으면 null) */
+function itemAt(k, i) {
+  const idx = k * model.pp + i - startCell;
+  return idx >= 0 && idx < model.items.length ? model.items[idx] : null;
+}
+
+/* ══ 그리기(미리보기·PDF 공용) ══ */
+function roundRect(ctx, x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function drawPage(ctx, k, s, o) {
+  const sp = model.sp;
+  const ox = opt.offX, oy = opt.offY;
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, PAGE.w * s, PAGE.h * s);
+  for (let i = 0; i < model.pp; i++) {
+    const c = cellRect(sp, i);
+    const it = o.test ? null : itemAt(k, i);
+    const X = (c.x + (o.screen ? 0 : ox)) * s, Y = (c.y + (o.screen ? 0 : oy)) * s, W = c.w * s, H = c.h * s;
+    if (o.screen || o.guide) {
+      const skip = o.screen && k === 0 && i < startCell;
+      ctx.save();
+      if (sp.circle) { ctx.beginPath(); ctx.ellipse(X + W / 2, Y + H / 2, W / 2, H / 2, 0, 0, Math.PI * 2); }
+      else roundRect(ctx, X, Y, W, H, Math.min(2 * s, W / 6, H / 6));
+      if (o.screen) {
+        ctx.fillStyle = skip ? '#ece7e2' : it && it.over ? '#fdecec' : '#fbf8f5';
+        ctx.fill();
+        ctx.lineWidth = Math.max(1, 0.25 * s);
+        ctx.strokeStyle = it && it.over ? '#dc2626' : skip ? '#cfc4ba' : '#d6c6b8';
+        ctx.stroke();
+        if (skip) {
+          ctx.strokeStyle = '#c9bcb0'; ctx.lineWidth = Math.max(1, 0.2 * s);
+          ctx.beginPath(); ctx.moveTo(X + W * .2, Y + H * .2); ctx.lineTo(X + W * .8, Y + H * .8);
+          ctx.moveTo(X + W * .8, Y + H * .2); ctx.lineTo(X + W * .2, Y + H * .8); ctx.stroke();
+        }
+      } else {
+        ctx.setLineDash([1.2 * s, 0.9 * s]); ctx.lineWidth = Math.max(1, 0.2 * s); ctx.strokeStyle = '#888'; ctx.stroke();
+      }
+      ctx.restore();
+      if (o.test) {
+        ctx.fillStyle = '#888'; ctx.font = (2.4 * s) + 'px Arial,sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText(String(i + 1), X + 1 * s, Y + 0.6 * s);
+      }
+      if (o.screen && k === 0 && i === startCell && startCell > 0) {
+        ctx.fillStyle = '#c2410c'; ctx.beginPath(); ctx.arc(X + 2.2 * s, Y + 2.2 * s, 1.6 * s, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    if (!it) continue;
+    ctx.fillStyle = '#111';
+    ctx.textBaseline = 'alphabetic';
+    for (const L of it.lines) {
+      if (!L.t) continue;
+      ctx.font = (L.b ? '700 ' : '400 ') + (L.sz * s) + 'px ' + FONTS[opt.font];
+      ctx.textAlign = L.a;
+      const tx = L.a === 'left' ? L.x : L.a === 'right' ? L.x + L.w : L.x + L.w / 2;
+      ctx.fillText(L.t, X + tx * s, Y + baseY(L) * s);
+    }
+  }
+}
+
+/* ── 미리보기 ── */
+let pvTimer = 0;
+function schedulePreview() { clearTimeout(pvTimer); pvTimer = setTimeout(drawPreview, 60); }
+function drawPreview() {
+  const cv = $('#pv');
+  const box = cv.parentElement;
+  /* 상자가 아직 안 그려졌거나(폭 0) 아주 좁으면 음수 크기가 되어 arcTo 가 예외를 낸다 */
+  const cssW = Math.max(120, Math.min(box.clientWidth - 22, 520));
+  const dpr = Math.min(3, window.devicePixelRatio || 1);
+  const s = cssW / PAGE.w * dpr;
+  cv.width = Math.round(PAGE.w * s); cv.height = Math.round(PAGE.h * s);
+  cv.style.width = cssW + 'px';
+  drawPage(cv.getContext('2d'), curPage, s, { screen: true });
+  $('#pvPos').textContent = (curPage + 1) + ' / ' + model.nPages + '장';
+  $('#pvPrev').disabled = curPage <= 0;
+  $('#pvNext').disabled = curPage >= model.nPages - 1;
+}
+function pvHit(e) {
+  const cv = $('#pv'), r = cv.getBoundingClientRect();
+  const mx = (e.clientX - r.left) / r.width * PAGE.w, my = (e.clientY - r.top) / r.height * PAGE.h;
+  const sp = model.sp;
+  for (let i = 0; i < model.pp; i++) {
+    const c = cellRect(sp, i);
+    if (mx >= c.x && mx <= c.x + c.w && my >= c.y && my <= c.y + c.h) {
+      if (curPage !== 0) { toast('시작 칸은 첫 장에서만 고를 수 있습니다'); curPage = 0; update(); return; }
+      startCell = startCell === i ? 0 : i;
+      update();
+      toast(startCell ? (startCell + 1) + '번 칸부터 채웁니다 · 앞의 ' + startCell + '칸은 비워 둡니다' : '1번 칸부터 채웁니다', 2600);
+      return;
+    }
+  }
+}
+
+/* ══ 인쇄 ══ */
+function buildPrintArea(test) {
+  const area = $('#printArea');
+  const sp = model.sp, F = FONTS[opt.font];
+  const ox = opt.offX, oy = opt.offY;
+  const guide = test || opt.guide;
+  const np = test ? 1 : model.nPages;
+  let html = '';
+  for (let k = 0; k < np; k++) {
+    html += '<div class="pp">';
+    for (let i = 0; i < model.pp; i++) {
+      const it = test ? null : itemAt(k, i);
+      if (!it && !guide) continue;
+      const c = cellRect(sp, i);
+      html += '<div class="lb' + (guide ? ' g' + (sp.circle ? ' c' : '') : '') + '" style="left:' + (c.x + ox).toFixed(2) + 'mm;top:' + (c.y + oy).toFixed(2) +
+        'mm;width:' + c.w.toFixed(2) + 'mm;height:' + c.h.toFixed(2) + 'mm">';
+      if (test) html += '<span class="no">' + (i + 1) + '</span>';
+      if (it) for (const L of it.lines) {
+        if (!L.t) continue;
+        html += '<div class="ln" style="left:' + L.x.toFixed(2) + 'mm;width:' + L.w.toFixed(2) + 'mm;top:' + L.y.toFixed(2) + 'mm;height:' + L.lh.toFixed(3) +
+          'mm;line-height:' + L.lh.toFixed(3) + 'mm;font:' + (L.b ? 700 : 400) + ' ' + L.sz.toFixed(3) + 'mm ' + F.replace(/"/g, "'") + ';text-align:' + L.a + '">' + escH(L.t) + '</div>';
+      }
+      html += '</div>';
+    }
+    html += '</div>';
+  }
+  area.innerHTML = html;
+}
+function doPrint(test) {
+  if (busy) return;
+  if (!test && !model.items.length) { toast('먼저 내용을 넣어 주세요'); return; }
+  buildPrintArea(test);
+  $('#pageStyle').textContent = '@page{size:A4 portrait;margin:0}';
+  document.body.classList.add('printing');
+  const done = () => {
+    document.body.classList.remove('printing');
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  setTimeout(() => {
+    try { window.print(); } catch (e) { toast('인쇄 창을 열지 못했습니다'); }
+    setTimeout(done, 1500);
+    if (!test) AD.done('인쇄 창을 열었습니다 — ' + model.items.length + '칸 · 라벨지 ' + model.nPages + '장. 라벨지에 찍기 전에 이것만 확인하세요.', '인쇄 창을 열었습니다');
+    else toast('일반 A4 종이에 찍어 라벨지 뒤에 겹쳐 비춰 보세요', 4200);
+  }, 60);
+}
+
+/* ══ PDF ══ */
+const te8 = new TextEncoder();
+function buildPdf(pages, pwPt, phPt) {
+  const parts = [], offs = [];
+  let len = 0;
+  const push = x => { const u = typeof x === 'string' ? te8.encode(x) : x; parts.push(u); len += u.length; };
+  push('%PDF-1.4\n'); push(new Uint8Array([37, 226, 227, 207, 211, 10]));
+  const nObj = 2 + pages.length * 3;
+  const obj = (n, body) => { offs[n] = len; push(n + ' 0 obj\n'); for (const b of [].concat(body)) push(b); push('\nendobj\n'); };
+  obj(1, '<< /Type /Catalog /Pages 2 0 R /ViewerPreferences << /PrintScaling /None >> >>');
+  obj(2, '<< /Type /Pages /Kids [' + pages.map((_, k) => (3 + k * 3) + ' 0 R').join(' ') + '] /Count ' + pages.length + ' >>');
+  pages.forEach((pg, k) => {
+    const n = 3 + k * 3;
+    const cs = 'q ' + pwPt.toFixed(2) + ' 0 0 ' + phPt.toFixed(2) + ' 0 0 cm /Im0 Do Q';
+    obj(n, '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + pwPt.toFixed(2) + ' ' + phPt.toFixed(2) + '] /Resources << /XObject << /Im0 ' + (n + 2) + ' 0 R >> >> /Contents ' + (n + 1) + ' 0 R >>');
+    obj(n + 1, ['<< /Length ' + cs.length + ' >>\nstream\n', cs, '\nendstream']);
+    obj(n + 2, ['<< /Type /XObject /Subtype /Image /Width ' + pg.w + ' /Height ' + pg.h + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + pg.data.length + ' >>\nstream\n', pg.data, '\nendstream']);
+  });
+  const xref = len;
+  let x = 'xref\n0 ' + (nObj + 1) + '\n0000000000 65535 f \n';
+  for (let n = 1; n <= nObj; n++) x += String(offs[n]).padStart(10, '0') + ' 00000 n \n';
+  push(x + 'trailer\n<< /Size ' + (nObj + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
+  return new Blob(parts, { type: 'application/pdf' });
+}
+async function makePdf() {
+  const pages = [];
+  const cv = document.createElement('canvas');
+  cv.width = Math.round(PAGE.w * PDF_PPM); cv.height = Math.round(PAGE.h * PDF_PPM);
+  const ctx = cv.getContext('2d');
+  for (let k = 0; k < model.nPages; k++) {
+    drawPage(ctx, k, PDF_PPM, { guide: opt.guide });
+    const blob = await new Promise(r => cv.toBlob(r, 'image/jpeg', 0.9));
+    pages.push({ data: new Uint8Array(await blob.arrayBuffer()), w: cv.width, h: cv.height });
+    const b = $('#dlPdf');
+    b.innerHTML = 'PDF 만드는 중<i>' + (k + 1) + ' / ' + model.nPages + '장</i>';
+    await sleep0();
+  }
+  cv.width = cv.height = 1;
+  return buildPdf(pages, PAGE.w * 72 / 25.4, PAGE.h * 72 / 25.4);
+}
+function docBase() {
+  const sp = model.sp;
+  const kind = opt.mode === 'addr' ? '주소라벨' : opt.mode === 'same' ? '이름라벨' : '라벨';
+  return kind + '_' + perPage(sp) + '칸라벨지_' + model.items.length + '장';
+}
+async function savePdf() {
+  if (busy || !model.items.length) return;
+  busy = true;
+  const b = $('#dlPdf'), old = b.innerHTML;
+  try {
+    const blob = await makePdf();
+    const name = docBase() + '.pdf';
+    if (!download(blob, name)) return;
+    toast('저장했습니다 · ' + name + ' · ' + fmtSize(blob.size), 3200);
+    AD.done('「' + name + '」로 저장했습니다(라벨지 ' + model.nPages + '장 · ' + fmtSize(blob.size) + '). PDF를 열어 인쇄할 때 「실제 크기」를 고르세요.', 'PDF로 저장했습니다');
+  } catch (e) {
+    console.error(e);
+    toast('만들지 못했습니다 · ' + ((e && e.message) || e), 5200);
+  } finally { busy = false; b.innerHTML = old; }
+}
+
+/* ══ 화면 갱신 ══ */
+function sheetSvg(sp) {
+  let h = '<rect class="pg" x="0.5" y="0.5" width="209" height="296" rx="3" stroke-width="2"/>';
+  const pp = perPage(sp);
+  const many = pp > 120;
+  for (let i = 0; i < pp; i++) {
+    const c = cellRect(sp, i);
+    if (sp.circle) h += '<ellipse class="cl" cx="' + (c.x + c.w / 2) + '" cy="' + (c.y + c.h / 2) + '" rx="' + c.w / 2 + '" ry="' + c.h / 2 + '"' + (many ? ' stroke-width="0"' : '') + '/>';
+    else h += '<rect class="cl" x="' + c.x + '" y="' + c.y + '" width="' + c.w + '" height="' + c.h + '" rx="' + Math.min(2, c.w / 6, c.h / 6) + '"' + (many ? ' stroke-width="0"' : '') + '/>';
+  }
+  return h;
+}
+function paintSpec() {
+  document.querySelectorAll('#segBrand button').forEach(b => b.classList.toggle('on', (opt.spec === 'custom') === (b.dataset.b === 'custom')));
+  const custom = opt.spec === 'custom';
+  $('#specPick').classList.toggle('hide', custom);
+  $('#customBox').classList.toggle('hide', !custom);
+  if (!custom) {
+    $('#selSpec').innerHTML = SPEC_LIST.map(s => '<option value="' + s.key + '"' + (s.key === opt.spec ? ' selected' : '') + '>' + escH(specLabel(s)) + '</option>').join('');
+    $('#chips').innerHTML = POPULAR.map(k => {
+      const s = specByKey(k); if (!s) return '';
+      return '<button type="button" class="chip' + (k === opt.spec ? ' on' : '') + '" data-k="' + k + '">' + perPage(s) + '칸 <i>' + (s.circle ? '원형 ' + fmm(s.w) : fmm(s.w) + '×' + fmm(s.h)) + '</i></button>';
+    }).join('');
+  } else {
+    const c = opt.custom;
+    const map = { cW: 'w', cH: 'h', cC: 'cols', cR: 'rows', cT: 'top', cL: 'left', cHG: 'hg', cVG: 'vg' };
+    for (const id in map) { const el = $('#' + id); if (document.activeElement !== el) el.value = c[map[id]]; }
+    $('#cCirc').checked = !!c.circle;
+  }
+  const sp = curSpec(), f = specFit(sp);
+  $('#sheetSvg').innerHTML = sheetSvg(sp);
+  $('#sinfo').innerHTML = '<b>' + (custom ? '직접 입력' : sp.use + ' 라벨지') + '</b> · 한 장 <b>' + perPage(sp) + '칸</b>(' + sp.cols + '열 × ' + sp.rows + '행) · 칸 ' + fmm(sp.w) + '×' + fmm(sp.h) + 'mm' +
+    (sp.circle ? ' 원형' : '') + '<br>위 ' + fmm(sp.top) + ' · 왼쪽 ' + fmm(sp.left) + ' · 간격 ' + fmm(sp.hg) + '/' + fmm(sp.vg) + 'mm' +
+    (f.ok ? '' : '<br><b style="color:var(--danger)">칸이 A4 밖으로 나갑니다(오른쪽 ' + fmm(f.right) + ' · 아래 ' + fmm(f.bottom) + 'mm) — 치수를 확인하세요</b>');
+  $('#specHint').textContent = (custom ? '직접 입력 · ' : '') + perPage(sp) + '칸 · ' + fmm(sp.w) + '×' + fmm(sp.h);
+}
+function paintMode() {
+  document.querySelectorAll('#segMode button').forEach(b => b.classList.toggle('on', b.dataset.m === opt.mode));
+  $('#mAddr').classList.toggle('hide', opt.mode !== 'addr');
+  $('#mSame').classList.toggle('hide', opt.mode !== 'same');
+  $('#mList').classList.toggle('hide', opt.mode !== 'list');
+  document.querySelectorAll('#segSheets button').forEach(b => b.classList.toggle('on', +b.dataset.n === opt.sheets));
+  document.querySelectorAll('#segSplit button').forEach(b => b.classList.toggle('on', b.dataset.s === opt.split));
+  $('#listHint').textContent = opt.split === 'block' ? '빈 줄 하나로 라벨을 나눕니다' : '한 줄이 라벨 한 칸입니다';
+  $('#selHonor').value = opt.honor;
+  $('#selCopies').value = String(opt.copies);
+  $('#selCopiesL').value = String(opt.copiesL);
+  $('#optZip').checked = opt.zip; $('#optTel').checked = opt.tel;
+  document.querySelectorAll('#segFont button').forEach(b => b.classList.toggle('on', b.dataset.f === opt.font));
+  const sz = opt.size[opt.mode];
+  $('#rngSize').value = sz; $('#outSize').textContent = sz + 'pt';
+  document.querySelectorAll('#segAlign button').forEach(b => b.classList.toggle('on', b.dataset.a === opt.align[opt.mode]));
+  $('#alignSub').classList.toggle('hide', opt.mode !== 'addr');
+  $('#rowBold').classList.toggle('hide', opt.mode === 'addr');
+  $('#optBold').checked = !!opt.bold[opt.mode];
+  $('#optGuide').checked = opt.guide;
+  if (document.activeElement !== $('#offX')) $('#offX').value = opt.offX;
+  if (document.activeElement !== $('#offY')) $('#offY').value = opt.offY;
+}
+function update() {
+  buildModel();
+  const m = model, n = m.items.length;
+  if (document.activeElement !== $('#inStart')) $('#inStart').value = startCell + 1;
+  $('#inStart').max = m.pp;
+  const sumTxt = n ? '라벨 <b>' + n.toLocaleString() + '칸</b> · 라벨지 <b>' + m.nPages + '장</b>' + (startCell ? ' (첫 장은 ' + (startCell + 1) + '번 칸부터)' : '') : '';
+  if (opt.mode === 'addr') {
+    const recs = table.rows.length ? addrRecords().length : 0;
+    const miss = [];
+    if (table.rows.length) {
+      if (table.map.name === undefined || table.map.name < 0) miss.push('받는 분');
+      if (table.map.addr === undefined || table.map.addr < 0) miss.push('주소');
+    }
+    $('#dsumA').innerHTML = !table.rows.length ? '엑셀에서 복사해 붙여 넣거나 파일을 열면, 열을 알아서 찾아 줍니다.' :
+      '<b>' + recs.toLocaleString() + '명</b> · ' + sumTxt + (miss.length ? '<br><span class="bad">「' + miss.join('」·「') + '」 열을 못 찾았습니다 — 위에서 골라 주세요</span>' : '');
+    $('#dataHint').textContent = recs ? recs + '명' : '';
+  } else if (opt.mode === 'same') {
+    $('#dsumS').innerHTML = n ? sumTxt + ' · 같은 내용으로 가득 채웁니다' : '글을 적으면 라벨지 한 장 전체에 같은 내용이 들어갑니다.';
+    $('#dataHint').textContent = n ? n + '칸' : '';
+  } else {
+    $('#dsumL').innerHTML = n ? sumTxt : '줄마다 라벨 한 칸씩 들어갑니다.';
+    $('#dataHint').textContent = n ? n + '칸' : '';
+  }
+  $('#styleHint').textContent = (opt.font === 'sans' ? '고딕' : '명조') + ' · ' + opt.size[opt.mode] + 'pt';
+  $('#pvState').textContent = n ? n + '칸 · ' + m.nPages + '장' : '빈 라벨지';
+  $('#mbarTxt').textContent = n ? n + '칸 · 라벨지 ' + m.nPages + '장' : '라벨';
+  $('#doPrint').disabled = !n; $('#dlPdf').disabled = !n;
+  const ow = $('#overWarn');
+  if (m.over) { ow.textContent = '빨간 칸 ' + m.over + '개는 가장 작은 글자(5pt)로도 다 안 들어갑니다 — 글을 줄이거나 더 큰 라벨지를 고르세요.'; ow.classList.remove('hide'); }
+  else ow.classList.add('hide');
+  schedulePreview();
+  updateMbar();
+}
+function setOpt(fn) { fn(); saveOpt(); layCache.clear(); paintSpec(); paintMode(); update(); }
+
+/* ── 예시(누가 봐도 가짜인 이름·주소·번호) ── */
+const SAMPLE_ADDR = [
+  ['우편번호', '이름', '주소', '상세주소', '연락처'],
+  ['12345', '홍길동', '○○시 ○○구 가상로 12', '101동 1001호', '010-0000-0000'],
+  ['12346', '성춘향', '○○도 ○○시 예시대로 345', '남원빌라 2층', '010-0000-0000'],
+  ['12347', '이몽룡', '○○시 ○○구 보기길 6-7', '', '010-0000-0000'],
+  ['12348', '임꺽정', '○○도 ○○군 ○○읍 샘플로 89', '청석골 마을회관', '010-0000-0000'],
+  ['12349', '전우치', '○○시 ○○구 견본로 101', '도술타워 11층 1102호', '010-0000-0000']
+];
+
+/* ════════════════════════════════════════════════════════════
+   앱 안 브라우저(네이버·카카오톡 등) — 인쇄 창·파일 내려받기가 막혀 있다
+     ① 앱 안에서 열리면 사용을 막는 창을 띄워 브라우저를 옮기게 한다
+     ② 그래도 저장을 누르면 blob: 대신 data: 주소로 시도한다(10MB 까지)
+     ③ 아이폰은 사파리를 강제로 열 수 없어 주소 복사 + 메뉴 안내로 간다
+   ════════════════════════════════════════════════════════════ */
+const UA = navigator.userAgent || '';
+const IA = {
+  naver: /NAVER\(inapp/i.test(UA),
+  kakao: /KAKAOTALK/i.test(UA),
+  line: /\bLine\//i.test(UA),
+  ios: /iPhone|iPad|iPod/i.test(UA),
+  android: /Android/i.test(UA)
+};
+IA.on = IA.naver || IA.kakao || IA.line ||
+  /Instagram|FBAN|FBAV|FB_IAB|DaumApps|everytimeApp|band\/|KAKAOSTORY/i.test(UA) ||
+  (IA.android && /;\s*wv\)/i.test(UA));   /* 안드로이드 WebView 표시 */
+const IA_MAX = 10 * 1048576;               /* data: 주소는 base64 라 4/3 배로 커진다 — 그 이상은 막는다 */
+
+function externalUrl() {
+  const url = location.href;
+  if (IA.kakao) return 'kakaotalk://web/openExternal?url=' + encodeURIComponent(url);
+  if (IA.line) return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'openExternalBrowser=1';
+  if (IA.android) return 'intent://' + url.replace(/^https?:\/\//i, '') +
+    '#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=' + encodeURIComponent(url) + ';end';
+  return '';          /* 아이폰은 사파리를 강제로 열 수 없다 */
+}
+function copyAddr(guide) {
+  const url = location.href;
+  const done = () => toast(guide ? '주소를 복사했습니다. 사파리를 열고 붙여 넣거나, 메뉴에서 「다른 브라우저로 열기」를 누르세요.' : '주소를 복사했습니다.', 5200);
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(url).then(done, () => fallbackCopy(url, done)); return; }
+  } catch (e) { /* 아래로 */ }
+  fallbackCopy(url, done);
+}
+function fallbackCopy(text, done) {
+  const t = document.createElement('textarea');
+  t.value = text; t.setAttribute('readonly', ''); t.style.cssText = 'position:fixed;left:-9999px;top:0';
+  document.body.appendChild(t); t.select(); t.setSelectionRange(0, text.length);
+  try { document.execCommand('copy'); done(); } catch (e) { toast('주소를 길게 눌러 복사해 주세요.', 4200); }
+  t.remove();
+}
+/* 저장은 전부 이 한 곳을 거친다. 막혔으면 false */
+function download(blob, name) {
+  if (IA.on) return downloadInApp(blob, name);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.rel = 'noopener';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  return true;
+}
+function downloadInApp(blob, name) {
+  if (blob.size > IA_MAX) {
+    toast('앱 안에서는 10MB가 넘는 파일을 저장할 수 없습니다. 위쪽 「' + $('#iaGo').textContent + '」를 눌러 주세요.', 5600);
+    return false;
+  }
+  const go = href => {
+    const a = document.createElement('a');
+    a.href = href; a.download = name; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  const fr = new FileReader();
+  fr.onload = () => { try { go(fr.result); } catch (e) { /* 안내로 넘어간다 */ } };
+  fr.onerror = () => toast('앱 안에서는 저장이 막혀 있습니다. 위쪽 「' + $('#iaGo').textContent + '」를 눌러 주세요.', 5200);
+  fr.readAsDataURL(blob);
+  return true;
+}
+
+/* ════════════════════════════════════════════════════════════
+   광고 — 한 화면에 4곳 (애드핏 운영정책: 한 페이지 4개 초과 게재 금지)
+     모바일  ① 맨 위 320×50   ③ 본문 320×100   ④ 완료 카드 300×250   ⑤ 하단 오버형 320×50
+     PC      ① 맨 위 320×50   ② 미리보기 위 320×50   ③ 본문 320×100   ④ 완료 카드 300×250
+   지킨 것
+     · ins 를 자리마다 다 만든 뒤 ba.min.js 는 맨 끝에 딱 한 번 붙인다
+     · 입력 중·미리보기를 보는 중에는 오버형을 내려 둔다(핵심 행동 중 광고 노출 금지)
+     · 완료 광고는 창으로 덮지 않고 본문에 카드로 펼친다(콘텐츠를 가리는 배치 금지)
+     · 앱 안에서 막는 창이 떠 있으면 광고를 부르지 않는다
+   ※ 단위 ID 는 애드핏에서 크기별로 따로 발급받아 아래 units 에만 적으면 된다.
+     DAN-XXXX… 로 남아 있는 자리는 점선 자리표시자만 그리고 요청은 보내지 않는다.
+   ════════════════════════════════════════════════════════════ */
+const AD = {
+  units: {
+    top:     { id: 'DAN-XXXXXXXXXXXXXXX1', w: 320, h: 50 },   /* 맨 위 · 모바일과 PC 크기가 같아 하나로 겸한다 */
+    side_pc: { id: 'DAN-XXXXXXXXXXXXXXX2', w: 320, h: 50 },   /* PC 미리보기 카드 위 (좁은 화면에서는 안 뜬다) */
+    mid:     { id: 'DAN-XXXXXXXXXXXXXXX3', w: 320, h: 100 },  /* 본문 중간 · 모바일·PC 같은 자리라 하나로 쓴다 */
+    done:    { id: 'DAN-XXXXXXXXXXXXXXX4', w: 300, h: 250 },  /* 인쇄·저장 완료 카드 · 모바일·PC 공통 */
+    anchor:  { id: 'DAN-XXXXXXXXXXXXXXX5', w: 320, h: 50 }    /* 모바일 하단 오버형 (PC 에서는 안 뜬다) */
+  },
+  iframeOk: true,   /* iframe 안에서도 띄우려면 true (애드핏에서는 권하지 않음) */
+  popup: true,      /* 완료 카드 */
+  overlay: true,    /* 하단 오버형 */
+  init() {
+    if (this.started) return;
+    this.started = true;
+    this.off = window.top !== window.self && !this.iframeOk;
+    this.pc = window.matchMedia('(min-width:980px)').matches;
+    if (this.off) { document.body.classList.add('no-ad'); return; }
+    this.put($('#ad-top'), 'top');
+    if (this.pc) this.put($('#ad-side'), 'side_pc');
+    this.put($('#ad-mid'), 'mid');
+    /* 숨어 있는 자리(하단 오버형·완료 카드)는 화면에 나온 다음에 부른다 —
+       안 보이는 동안 부르면 보는 사람 없이 노출만 잡힌다 */
+    this.load();
+  },
+  put(box, key, preload) {
+    const u = this.units[key];
+    if (!box || !u || box.dataset.ad) return;
+    if (document.querySelectorAll('ins.kakao_ad_area').length >= 4) return;
+    box.dataset.ad = key;
+    box.style.width = u.w + 'px';
+    if (/XXXX/.test(u.id)) { box.style.height = u.h + 'px'; box.innerHTML = '<div class="ad-ph">광고 ' + u.w + ' × ' + u.h + '</div>'; return; }
+    box.style.minHeight = u.h + 'px';
+    /* 광고가 안 내려오면 빈 칸이 남는다 — 공식 콜백으로 접는다. 단위가 여럿이면 이름이 서로 달라야 한다 */
+    const fail = 'adNone_' + box.id.replace(/-/g, '_');
+    window[fail] = () => {
+      box.classList.add('ad-none');
+      if (key === 'anchor') { this.closed = true; this.sync(true); }
+      if (key === 'done') { const d = $('#doneAd'); if (d) d.classList.add('ad-none'); }
+    };
+    const ins = document.createElement('ins');
+    ins.className = 'kakao_ad_area'; ins.style.display = 'none';
+    ins.setAttribute('data-ad-unit', u.id);
+    ins.setAttribute('data-ad-width', String(u.w));
+    ins.setAttribute('data-ad-height', String(u.h));
+    ins.setAttribute('data-ad-onfail', fail);
+    if (preload) ins.setAttribute('data-ad-preload', 'Y');
+    box.appendChild(ins);
+    this.need = true;
+  },
+  show(box, key) {
+    if (this.off || !this.started || !box || box.dataset.ad) return;
+    this.put(box, key, true);
+    this.load();
+    try {
+      const ins = box.querySelector('ins');
+      if (ins && window.adfit && typeof window.adfit.render === 'function') window.adfit.render(ins);
+    } catch (e) { /* 안 되면 0.7초 뒤 preload 차례가 채운다 */ }
+  },
+  load() {
+    if (!this.need || this.loaded) return;
+    this.loaded = true;
+    const s = document.createElement('script');
+    s.type = 'text/javascript'; s.async = true;
+    s.src = 'https://t1.kakaocdn.net/kas/static/ba.min.js';
+    document.body.appendChild(s);
+  },
+  onScreen(el) {
+    if (!el || el.classList.contains('hide')) return false;
+    const r = el.getBoundingClientRect();
+    return r.height > 0 && r.bottom > 0 && r.top < window.innerHeight;
+  },
+  /* 하단 오버형 — 읽는 구간(이럴 때 씁니다·자주 묻는 것·주의)에서만 올라온다.
+     라벨지·내용·글자·미리보기·완료 카드 가운데 하나라도 화면에 보이면 내린다.
+     (휴대폰에서는 main 이 display:contents 라 #form 자체는 크기가 0 — 카드마다 따로 본다) */
+  sync(barOn) {
+    if (this.off || this.pc || !this.overlay || !this.started) return;
+    const modal = document.body.classList.contains('ia-lock');
+    const ae = document.activeElement;
+    const typing = !!(ae && ae.closest && (ae.closest('#form') || ae.closest('#side')) &&
+      (/^(SELECT|TEXTAREA)$/.test(ae.tagName) || (ae.tagName === 'INPUT' && !/^(checkbox|radio|button|file|range|color)$/.test(ae.type))));
+    const working = ['#specCard', '#dataCard', '#styleCard', '#pvCard', '#doneCard'].some(s => this.onScreen($(s)));
+    const show = !this.closed && !barOn && !modal && !typing && !working && window.scrollY > 320;
+    $('#anchor').classList.toggle('on', show);
+    document.body.classList.toggle('anch', show);
+    if (show) this.show($('#ad-anchor'), 'anchor');
+  },
+  done(msg, title) {
+    if (!this.popup) return;
+    $('#doneMsg').textContent = msg;
+    if (title) $('#doneTitle').textContent = title;
+    $('#doneCard').classList.remove('hide');
+    if (!this.off) this.show($('#ad-done'), 'done');
+    clearTimeout(this.goT);
+    this.goT = setTimeout(() => {
+      $('#doneCard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      updateMbar();
+    }, 250);
+  },
+  hideDone() { $('#doneCard').classList.add('hide'); updateMbar(); }
+};
+
+function initInApp() {
+  if (!IA.on) return;
+  const app = IA.naver ? (/NAVER\(inapp;\s*blog/i.test(UA) ? '네이버 블로그 앱' : '네이버 앱') : IA.kakao ? '카카오톡' : IA.line ? '라인' : '앱';
+  const copyOnly = IA.ios && !IA.kakao && !IA.line;
+  const chromeIntent = IA.android && !IA.kakao && !IA.line;
+  document.body.classList.add('inapp');
+  $('#iaMsg').textContent = app + ' 안에서는 라벨 인쇄·PDF 저장이 안 됩니다.';
+  $('#doneInapp').classList.remove('hide');
+  $('#iaDesc').innerHTML = '<b>' + app + '</b> 안에서 열렸습니다. 이 화면에서는 ' +
+    '<b>인쇄 창이 뜨지 않고 PDF도 내려받을 수 없습니다.</b> 주소록을 다 넣어도 인쇄할 수 없으니 ' +
+    '<b>붙여 넣기 전에</b> 브라우저를 옮겨 주세요.';
+  const steps = copyOnly
+    ? ['아래 <b>주소 복사</b>를 누르세요.',
+       '오른쪽 아래 <b>메뉴</b>에서 「다른 브라우저로 열기」를 누르거나, <b>사파리</b> 주소창에 붙여 넣으세요.']
+    : chromeIntent
+      ? ['아래 <b>크롬에서 열기</b>를 누르세요.',
+         '크롬이 없으면 오른쪽 위 <b>메뉴</b>에서 「다른 브라우저로 열기」를 누르세요.']
+      : ['아래 <b>다른 브라우저로 열기</b>를 누르세요.',
+         '열리지 않으면 ' + (IA.ios ? '화면의' : '오른쪽 위') + ' <b>메뉴</b>에서 「다른 브라우저로 열기」를 누르세요.'];
+  $('#iaSteps').innerHTML = steps.map(t => '<li>' + t + '</li>').join('');
+  const label = copyOnly ? '주소 복사' : chromeIntent ? '크롬에서 열기' : '다른 브라우저로 열기';
+  $('#iaGo').textContent = label; $('#iaGo2').textContent = label; $('#doneGo').textContent = label;
+  $('#iaSub').textContent = copyOnly
+    ? '사파리에 붙여 넣거나, 오른쪽 아래 메뉴에서 「다른 브라우저로 열기」를 누르세요.'
+    : '주소록을 넣기 전에 옮기면 다시 붙여 넣지 않아도 됩니다.';
+  let hidden = false;
+  try { hidden = sessionStorage.getItem('label_print.iahide') === '1'; } catch (e) { /* 무시 */ }
+  if (hidden) document.body.classList.remove('inapp');
+  lockInApp(true);
+}
+function lockInApp(on) {
+  document.body.classList.toggle('ia-lock', on);
+  const w = document.querySelector('.wrap');
+  if (on) w.setAttribute('inert', ''); else w.removeAttribute('inert');
+  if (!on) $('#iaModal').blur();
+}
+function iaCopied() {
+  $('#iaDesc').innerHTML = '주소를 <b>복사했습니다.</b> 이제 <b>사파리</b>를 열고 주소창에 붙여 넣으세요.';
+  $('#iaSteps').innerHTML = '<li>홈 화면에서 <b>사파리</b>를 엽니다.</li>' +
+    '<li>주소창을 길게 눌러 <b>붙여넣기</b> 하세요.</li>' +
+    '<li>또는 이 화면의 <b>메뉴</b> → 「다른 브라우저로 열기」.</li>';
+}
+
+/* 휴대폰: 내용·글자를 만지는 동안 미리보기가 화면 밖이면 아래 바를 띄운다 */
+function updateMbar() {
+  const has = model && model.items.length > 0;
+  const pr = $('#pvCard').getBoundingClientRect();
+  const inSet = AD.onScreen($('#dataCard')) || AD.onScreen($('#styleCard')) || AD.onScreen($('#specCard'));
+  const on = !!has && inSet && (pr.bottom < 60 || pr.top > window.innerHeight);
+  $('#mbar').classList.toggle('on', on);
+  $('#mbarGo').textContent = pr.bottom < 60 ? '미리보기 ↑' : '미리보기 ↓';
+  AD.sync(on);
+}
+
+function init() {
+  loadOpt();
+  paintSpec(); paintMode();
+  const locked = () => document.body.classList.contains('ia-lock');
+
+  /* 1. 라벨지 */
+  $('#segBrand').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    setOpt(() => {
+      if (b.dataset.b === 'custom') {
+        if (opt.spec !== 'custom') { const s = curSpec(); opt.custom = { w: s.w, h: s.h, rows: s.rows, cols: s.cols, top: s.top, left: s.left, hg: s.hg, vg: s.vg, circle: s.circle }; }
+        opt.spec = 'custom';
+      } else if (opt.spec === 'custom') { opt.spec = POPULAR[0]; }
+      startCell = 0; curPage = 0;
+    });
+  });
+  $('#selSpec').addEventListener('change', e => setOpt(() => { opt.spec = e.target.value; startCell = 0; curPage = 0; }));
+  $('#chips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.spec = b.dataset.k; startCell = 0; curPage = 0; }); });
+  const cmap = { cW: 'w', cH: 'h', cC: 'cols', cR: 'rows', cT: 'top', cL: 'left', cHG: 'hg', cVG: 'vg' };
+  for (const id in cmap) $('#' + id).addEventListener('input', e => {
+    const v = parseFloat(e.target.value);
+    if (!isFinite(v)) return;
+    setOpt(() => { opt.custom[cmap[id]] = (id === 'cC' || id === 'cR') ? Math.max(1, Math.min(id === 'cC' ? 12 : 40, Math.round(v))) : Math.max(0, v); startCell = 0; });
+  });
+  $('#cCirc').addEventListener('change', e => setOpt(() => { opt.custom.circle = e.target.checked; }));
+  $('#cCenter').addEventListener('click', () => setOpt(() => {
+    const c = opt.custom;
+    c.left = r1(Math.max(0, (PAGE.w - c.cols * c.w - (c.cols - 1) * c.hg) / 2));
+    c.top = r1(Math.max(0, (PAGE.h - c.rows * c.h - (c.rows - 1) * c.vg) / 2));
+  }));
+
+  /* 2. 내용 */
+  $('#segMode').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.mode = b.dataset.m; curPage = 0; }); });
+  let taT = 0;
+  $('#taAddr').addEventListener('input', () => { clearTimeout(taT); taT = setTimeout(() => { refreshTable(); update(); }, 180); });
+  $('#taAddr').addEventListener('paste', () => setTimeout(() => { table.sig = ''; refreshTable(); update(); }, 0));
+  $('#hasHead').addEventListener('change', e => { table.head = e.target.checked; table.map = guessMap(table.rows, table.head); buildMaps(); update(); });
+  $('#maps').addEventListener('change', e => {
+    const s = e.target.closest('select'); if (!s) return;
+    const v = +s.value, k = s.dataset.role;
+    /* 한 열은 한 역할에만 — 다른 곳에 걸려 있던 같은 열은 뗀다 */
+    if (v >= 0) for (const r in table.map) if (r !== k && table.map[r] === v) delete table.map[r];
+    if (v < 0) table.map[k] = -1; else table.map[k] = v;
+    buildMaps(); update();
+  });
+  $('#openFile').addEventListener('click', () => $('#file').click());
+  $('#file').addEventListener('change', e => { openFile(e.target.files[0]); e.target.value = ''; });
+  $('#sampleA').addEventListener('click', () => { $('#taAddr').value = SAMPLE_ADDR.map(r => r.join('\t')).join('\n'); table.sig = ''; refreshTable(); update(); });
+  $('#clearA').addEventListener('click', () => { $('#taAddr').value = ''; table = { rows: [], head: false, map: {}, auto: true, sig: '' }; buildMaps(); update(); });
+  $('#selHonor').addEventListener('change', e => setOpt(() => { opt.honor = e.target.value; }));
+  $('#selCopies').addEventListener('change', e => setOpt(() => { opt.copies = +e.target.value; }));
+  $('#selCopiesL').addEventListener('change', e => setOpt(() => { opt.copiesL = +e.target.value; }));
+  $('#optZip').addEventListener('change', e => setOpt(() => { opt.zip = e.target.checked; }));
+  $('#optTel').addEventListener('change', e => setOpt(() => { opt.tel = e.target.checked; }));
+  let tsT = 0;
+  $('#taSame').addEventListener('input', () => { clearTimeout(tsT); tsT = setTimeout(update, 120); });
+  $('#taList').addEventListener('input', () => { clearTimeout(tsT); tsT = setTimeout(update, 120); });
+  $('#sampleS1').addEventListener('click', () => { $('#taSame').value = '홍길동\n○○초등학교 1학년 2반'; update(); });
+  $('#sampleS2').addEventListener('click', () => { $('#taSame').value = '보내는 사람\n○○상회 · 010-0000-0000\n○○시 ○○구 가상로 12, 1층 (12345)'; update(); });
+  $('#sampleL').addEventListener('click', () => {
+    $('#taList').value = opt.split === 'block'
+      ? '2026 회계 서류\n1월 ~ 6월\n\n2026 회계 서류\n7월 ~ 12월\n\n2026 인사 서류\n입사·퇴사\n\n2026 계약서\n거래처'
+      : '2026 회계 서류\n2026 인사 서류\n2026 계약서\n2026 세금계산서\n2026 영수증\n2026 출장 보고서';
+    update();
+  });
+  $('#segSheets').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.sheets = +b.dataset.n; }); });
+  $('#segSplit').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.split = b.dataset.s; }); });
+  /* 주소록 파일 끌어 놓기 */
+  ['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => {
+    if (!e.dataTransfer || ![...(e.dataTransfer.types || [])].includes('Files')) return;
+    e.preventDefault(); if (!locked() && opt.mode === 'addr') $('#dropA').classList.add('over');
+  }));
+  ['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => {
+    if (ev === 'drop' || e.relatedTarget === null) $('#dropA').classList.remove('over');
+  }));
+  document.addEventListener('drop', e => {
+    if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+    e.preventDefault();
+    if (locked()) return;
+    if (opt.mode !== 'addr') setOpt(() => { opt.mode = 'addr'; });
+    openFile(e.dataTransfer.files[0]);
+  });
+
+  /* 3. 글자 */
+  $('#segFont').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.font = b.dataset.f; }); });
+  $('#rngSize').addEventListener('input', e => { opt.size[opt.mode] = +e.target.value; $('#outSize').textContent = e.target.value + 'pt'; saveOpt(); update(); });
+  $('#segAlign').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.align[opt.mode] = b.dataset.a; }); });
+  $('#optBold').addEventListener('change', e => setOpt(() => { opt.bold[opt.mode] = e.target.checked; }));
+
+  /* 미리보기 · 인쇄 */
+  $('#pvPrev').addEventListener('click', () => { if (curPage > 0) { curPage--; drawPreview(); } });
+  $('#pvNext').addEventListener('click', () => { if (curPage < model.nPages - 1) { curPage++; drawPreview(); } });
+  $('#pv').addEventListener('click', pvHit);
+  $('#inStart').addEventListener('input', e => {
+    const v = Math.round(+e.target.value);
+    if (!isFinite(v) || v < 1) return;
+    startCell = Math.min(model.pp, v) - 1; curPage = 0; update();
+  });
+  const off = (id, key) => $(id).addEventListener('input', e => {
+    const v = parseFloat(e.target.value);
+    opt[key] = isFinite(v) ? Math.max(-10, Math.min(10, v)) : 0; saveOpt();
+  });
+  off('#offX', 'offX'); off('#offY', 'offY');
+  $('#optGuide').addEventListener('change', e => { opt.guide = e.target.checked; saveOpt(); });
+  $('#doPrint').addEventListener('click', () => doPrint(false));
+  $('#doTest').addEventListener('click', () => doPrint(true));
+  $('#dlPdf').addEventListener('click', savePdf);
+
+  $('#doneHide').addEventListener('click', () => AD.hideDone());
+  $('#anchorX').addEventListener('click', () => { AD.closed = true; AD.sync(true); });
+
+  const goOut = () => { const u = externalUrl(); if (u) { location.href = u; return; } copyAddr(true); iaCopied(); };
+  $('#iaGo').addEventListener('click', goOut);
+  $('#iaGo2').addEventListener('click', goOut);
+  $('#doneGo').addEventListener('click', goOut);
+  $('#iaStay').addEventListener('click', () => {
+    lockInApp(false);
+    AD.init();
+    updateMbar();
+    toast('인쇄·저장은 안 됩니다. 인쇄하려면 위쪽 「' + $('#iaGo').textContent + '」를 눌러 주세요.', 5200);
+  });
+  $('#iaX').addEventListener('click', () => {
+    document.body.classList.remove('inapp');
+    try { sessionStorage.setItem('label_print.iahide', '1'); } catch (e) { /* 무시 */ }
+  });
+
+  window.addEventListener('scroll', updateMbar, { passive: true });
+  let rzT;
+  window.addEventListener('resize', () => { updateMbar(); clearTimeout(rzT); rzT = setTimeout(schedulePreview, 120); }, { passive: true });
+  for (const id of ['#form', '#side']) {
+    $(id).addEventListener('focusin', updateMbar);
+    $(id).addEventListener('focusout', () => setTimeout(updateMbar, 0));
+  }
+  $('#mbarGo').addEventListener('click', () => $('#pvCard').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  window.addEventListener('beforeunload', e => { if ($('#taAddr').value.trim().length > 40) { e.preventDefault(); e.returnValue = ''; } });
+
+  /* 글꼴이 늦게 도착하면 잰 너비가 달라진다 — 준비된 뒤 한 번 더 */
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { mcache.clear(); layCache.clear(); for (const k in fmet) delete fmet[k]; update(); });
+
+  initInApp();
+  if (!locked()) AD.init();
+  refreshTable();
+  update();
+}
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+</script>
+</body>
+</html>
