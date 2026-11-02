@@ -452,7 +452,11 @@ footer b{color:var(--fg)}
             <option value="1">1장</option><option value="2">2장</option><option value="3">3장</option><option value="4">4장</option><option value="5">5장</option>
           </select></label>
       </div>
-      <label class="chk"><input type="checkbox" id="optZip"><span>우편번호 표시<i>맨 윗줄에 작게 넣습니다</i></span></label>
+      <label class="chk"><input type="checkbox" id="optZip"><span>우편번호 표시<i>넣을 자리를 아래에서 고르세요</i></span></label>
+      <div class="seg sm" id="segZip" style="margin:-2px 0 8px 30px">
+        <button type="button" data-z="top">맨 윗줄<i>주소 위에 작게</i></button>
+        <button type="button" data-z="below">이름 아래<i>받는 분 바로 밑에</i></button>
+      </div>
       <label class="chk" style="padding-top:0"><input type="checkbox" id="optTel"><span>연락처 표시<i>택배·물류 라벨이면 켜 두세요</i></span></label>
     </div>
     <p class="dsum" id="dsumA"></p>
@@ -814,7 +818,7 @@ const OPT0 = {
   spec: '',
   custom: { w: 99.1, h: 38.1, rows: 7, cols: 2, top: 13.8, left: 5, hg: 2.5, vg: 0, circle: false },
   mode: 'addr', font: 'sans', size: { addr: 11, same: 16, list: 14 }, align: { addr: 'left', same: 'center', list: 'center' },
-  bold: { same: true, list: false }, honor: '귀하', copies: 1, copiesL: 1, zip: true, tel: false,
+  bold: { same: true, list: false }, honor: '귀하', copies: 1, copiesL: 1, zip: true, zipPos: 'top', tel: false,
   sheets: 1, split: 'line', offX: 0, offY: 0, guide: false
 };
 OPT0.spec = POPULAR[0];
@@ -827,6 +831,7 @@ function loadOpt() {
     if (opt.spec !== 'custom' && !specByKey(opt.spec)) opt.spec = POPULAR[0];
     if (!['addr', 'same', 'list'].includes(opt.mode)) opt.mode = 'addr';
     if (!['귀하', '님', '앞', '좌하', '귀중', ''].includes(opt.honor)) opt.honor = '귀하';
+    if (!['top', 'below'].includes(opt.zipPos)) opt.zipPos = 'top';
   } catch (e) { /* 무시 */ }
 }
 function saveOpt() { try { localStorage.setItem('label_print.opt', JSON.stringify(opt)); } catch (e) { /* 무시 */ } }
@@ -1130,12 +1135,14 @@ function labelsFromData() {
     const A = opt.align.addr;
     for (const r of rec) {
       const lines = [];
-      if (opt.zip && r.zip) lines.push({ t: r.zip, rel: 0.82, a: A === 'center' ? 'center' : 'left' });
+      const zipTop = opt.zip && r.zip && opt.zipPos !== 'below';
+      if (zipTop) lines.push({ t: r.zip, rel: 0.82, a: A === 'center' ? 'center' : 'left' });
       const ad = [r.addr, r.addr2].filter(Boolean).join(' ');
       if (ad) lines.push({ t: ad, rel: 1, a: A === 'center' ? 'center' : 'left' });
       const who = [r.org, r.name, r.title].filter(Boolean).join(' ');
       if (who && lines.length) lines.push({ t: '', rel: 0.6, gap: true, a: 'left' });   /* 주소와 받는 분 사이를 조금 띄운다 */
       if (who) lines.push({ t: who + (opt.honor ? ' ' + opt.honor : ''), rel: 1.25, b: true, a: A === 'center' ? 'center' : 'right' });
+      if (opt.zip && r.zip && !zipTop) lines.push({ t: r.zip, rel: 0.9, a: A === 'center' ? 'center' : 'right' });   /* 받는 분 바로 밑 */
       if (opt.tel && r.tel) lines.push({ t: r.tel, rel: 0.85, a: A === 'center' ? 'center' : 'right' });
       if (!lines.length) continue;
       for (let c = 0; c < opt.copies; c++) out.push(lines);
@@ -1537,6 +1544,8 @@ function paintMode() {
   $('#selCopies').value = String(opt.copies);
   $('#selCopiesL').value = String(opt.copiesL);
   $('#optZip').checked = opt.zip; $('#optTel').checked = opt.tel;
+  $('#segZip').classList.toggle('hide', !opt.zip);
+  document.querySelectorAll('#segZip button').forEach(b => b.classList.toggle('on', b.dataset.z === opt.zipPos));
   document.querySelectorAll('#segFont button').forEach(b => b.classList.toggle('on', b.dataset.f === opt.font));
   const sz = opt.size[opt.mode];
   $('#rngSize').value = sz; $('#outSize').textContent = sz + 'pt';
@@ -1883,6 +1892,7 @@ function init() {
   $('#selCopiesL').addEventListener('change', e => setOpt(() => { opt.copiesL = +e.target.value; }));
   $('#optZip').addEventListener('change', e => setOpt(() => { opt.zip = e.target.checked; }));
   $('#optTel').addEventListener('change', e => setOpt(() => { opt.tel = e.target.checked; }));
+  $('#segZip').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.zipPos = b.dataset.z; }); });
   let tsT = 0;
   $('#taSame').addEventListener('input', () => { clearTimeout(tsT); tsT = setTimeout(update, 120); });
   $('#taList').addEventListener('input', () => { clearTimeout(tsT); tsT = setTimeout(update, 120); });
