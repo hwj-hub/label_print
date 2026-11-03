@@ -540,6 +540,11 @@ footer b{color:var(--fg)}
       <div class="arow"><span>주소</span><div class="seg sm" data-f="addr"><button type="button" data-a="left">왼쪽</button><button type="button" data-a="center">가운데</button><button type="button" data-a="right">오른쪽</button></div></div>
       <div class="arow"><span>받는 분</span><div class="seg sm" data-f="who"><button type="button" data-a="left">왼쪽</button><button type="button" data-a="center">가운데</button><button type="button" data-a="right">오른쪽</button></div></div>
       <div class="arow"><span>연락처</span><div class="seg sm" data-f="tel"><button type="button" data-a="left">왼쪽</button><button type="button" data-a="center">가운데</button><button type="button" data-a="right">오른쪽</button><button type="button" data-a="name">이름 맞춤</button></div></div>
+      <p class="hint" style="margin:12px 0 2px;font-size:12px;color:var(--muted)">좌우 위치 · 누를 때마다 0.5mm씩 옮깁니다 <button type="button" class="mini" id="offAReset" style="margin-left:4px">처음 자리로</button></p>
+      <div class="arow"><span>우편번호</span><div class="seg sm szs" data-o="zip"><button type="button" data-d="-1" aria-label="우편번호 왼쪽으로">◀</button><output></output><button type="button" data-d="1" aria-label="우편번호 오른쪽으로">▶</button></div></div>
+      <div class="arow"><span>주소</span><div class="seg sm szs" data-o="addr"><button type="button" data-d="-1" aria-label="주소 왼쪽으로">◀</button><output></output><button type="button" data-d="1" aria-label="주소 오른쪽으로">▶</button></div></div>
+      <div class="arow"><span>받는 분</span><div class="seg sm szs" data-o="who"><button type="button" data-d="-1" aria-label="받는 분 왼쪽으로">◀</button><output></output><button type="button" data-d="1" aria-label="받는 분 오른쪽으로">▶</button></div></div>
+      <div class="arow"><span>연락처</span><div class="seg sm szs" data-o="tel"><button type="button" data-d="-1" aria-label="연락처 왼쪽으로">◀</button><output></output><button type="button" data-d="1" aria-label="연락처 오른쪽으로">▶</button></div></div>
     </div>
   </div>
   <label class="chk" id="rowBold"><input type="checkbox" id="optBold"><span>첫 줄을 크고 굵게<i>이름·제목 줄을 눈에 띄게</i></span></label>
@@ -840,6 +845,7 @@ const OPT0 = {
   mode: 'addr', font: 'sans', size: { addr: 11, same: 16, list: 14 }, align: { addr: 'left', same: 'center', list: 'center' },
   alignA: { zip: 'left', addr: 'left', who: 'right', tel: 'right' },   /* 주소 라벨 줄마다 정렬 */
   relA: { zip: 0.82, addr: 1, who: 1.25, tel: 0.85 },                   /* 주소 라벨 줄마다 크기(글자 크기 막대에 곱하는 배율) */
+  offA: { zip: 0, addr: 0, who: 0, tel: 0 },                             /* 주소 라벨 줄마다 좌우 이동(mm, + 가 오른쪽) */
   bold: { same: true, list: false }, honor: '귀하', copies: 1, copiesL: 1, zip: true, zipPos: 'top', tel: false,
   sheets: 1, split: 'line', offX: 0, offY: 0, guide: false
 };
@@ -851,7 +857,8 @@ function loadOpt() {
     if (o && typeof o === 'object') for (const k in OPT0) if (k in o && typeof o[k] === typeof OPT0[k]) opt[k] = o[k];
     /* 줄마다 정렬이 생기기 전에 「가운데」를 골라 둔 분은 모두 가운데로 */
     if (o && !o.alignA && opt.align && opt.align.addr === 'center') opt.alignA = { zip: 'center', addr: 'center', who: 'center', tel: 'center' };
-    for (const k of ['custom', 'size', 'align', 'bold', 'alignA', 'relA']) opt[k] = Object.assign({}, OPT0[k], opt[k]);
+    for (const k of ['custom', 'size', 'align', 'bold', 'alignA', 'relA', 'offA']) opt[k] = Object.assign({}, OPT0[k], opt[k]);
+    for (const k in OPT0.offA) if (!(Math.abs(opt.offA[k]) <= 60)) opt.offA[k] = 0;
     for (const k in OPT0.relA) if (!(opt.relA[k] >= 0.3 && opt.relA[k] <= 4)) opt.relA[k] = OPT0.relA[k];
     for (const k in opt.alignA) if (!['left', 'center', 'right'].concat(k === 'zip' || k === 'tel' ? ['name'] : []).includes(opt.alignA[k])) opt.alignA[k] = OPT0.alignA[k];
     if (opt.spec !== 'custom' && !specByKey(opt.spec)) opt.spec = POPULAR[0];
@@ -1158,19 +1165,19 @@ function labelsFromData() {
   const out = [];
   if (opt.mode === 'addr') {
     const rec = addrRecords();
-    const AA = opt.alignA, RA = {};
+    const AA = opt.alignA, OA = opt.offA, RA = {};
     for (const f in opt.relA) RA[f] = ptOf(f) / opt.size.addr;   /* 화면에 보이는 pt(0.5 단위) 그대로 찍히게 */
     for (const r of rec) {
       const lines = [];
       const zipTop = opt.zip && r.zip && opt.zipPos !== 'below';
-      if (zipTop) lines.push({ t: r.zip, rel: RA.zip, a: AA.zip });
+      if (zipTop) lines.push({ t: r.zip, rel: RA.zip, a: AA.zip, dx: OA.zip });
       const ad = [r.addr, r.addr2].filter(Boolean).join(' ');
-      if (ad) lines.push({ t: ad, rel: RA.addr, a: AA.addr });
+      if (ad) lines.push({ t: ad, rel: RA.addr, a: AA.addr, dx: OA.addr });
       const who = [r.org, r.name, r.title].filter(Boolean).join(' ');
       if (who && lines.length) lines.push({ t: '', rel: 0.6, gap: true, a: 'left' });   /* 주소와 받는 분 사이를 조금 띄운다 */
-      if (who) lines.push({ t: who + (opt.honor ? ' ' + opt.honor : ''), rel: RA.who, b: true, a: AA.who, who: true });
-      if (opt.zip && r.zip && !zipTop) lines.push({ t: r.zip, rel: RA.zip, a: AA.zip });   /* 받는 분 바로 밑 */
-      if (opt.tel && r.tel) lines.push({ t: r.tel, rel: RA.tel, a: AA.tel });
+      if (who) lines.push({ t: who + (opt.honor ? ' ' + opt.honor : ''), rel: RA.who, b: true, a: AA.who, who: true, dx: OA.who });
+      if (opt.zip && r.zip && !zipTop) lines.push({ t: r.zip, rel: RA.zip, a: AA.zip, dx: OA.zip });   /* 받는 분 바로 밑 */
+      if (opt.tel && r.tel) lines.push({ t: r.tel, rel: RA.tel, a: AA.tel, dx: OA.tel });
       if (!lines.length) continue;
       for (let c = 0; c < opt.copies; c++) out.push(lines);
     }
@@ -1274,7 +1281,7 @@ function layoutLabel(lines, sp, maxPt) {
       const parts = wm === 'none' || L.nw ? [L.t] : wrapLine(L.t, box.w, sz, L.b, wm === 'word');
       for (const p of parts) {
         if (textW(p, L.b) / 100 * sz > box.w + 0.01) wide = true;
-        out.push({ t: p, sz, b: !!L.b, a: L.a, who: !!L.who });
+        out.push({ t: p, sz, b: !!L.b, a: L.a, who: !!L.who, dx: L.dx || 0 });
         tot += sz * LH;
       }
     }
@@ -1300,6 +1307,14 @@ function layoutLabel(lines, sp, maxPt) {
     y += lh;
     return o;
   });
+  /* 줄마다 좌우 이동 — 글자가 칸 안쪽 상자를 벗어나지 않는 만큼만 */
+  const nudge = (L, dx) => {
+    if (!dx || !L.t) return;
+    const tw = textW(L.t, L.b) / 100 * L.sz;
+    const left = L.a === 'left' ? L.x : L.a === 'right' ? L.x + L.w - tw : L.x + (L.w - tw) / 2;
+    L.x += Math.max(box.dx - left, Math.min(box.dx + box.w - (left + tw), dx));
+  };
+  placed.forEach((L, i) => { if (L.a !== 'name') nudge(L, res.out[i].dx); });
   /* 「이름 맞춤」 줄은 받는 분 줄의 첫 글자 자리에서 시작한다(받는 분이 여러 줄이면 가장 왼쪽) */
   const whoX = res.out.reduce((m, l, i) => {
     if (!l.who || !l.t) return m;
@@ -1313,6 +1328,7 @@ function layoutLabel(lines, sp, maxPt) {
     else if (whoX + tw > box.dx + box.w + 0.01) L.a = 'right';     /* 이름 자리에서 시작하면 넘칠 때는 오른쪽 끝에 붙인다 */
     else { L.w = box.dx + box.w - whoX; L.x = whoX; L.a = 'left'; }
   }
+  placed.forEach((L, i) => { if (res.out[i].a === 'name') nudge(L, res.out[i].dx); });
   const r = { lines: placed, pt, over: !res.ok, shrunk: pt < maxPt };
   if (layCache.size > 5000) layCache.clear();
   layCache.set(key, r);
@@ -1577,6 +1593,10 @@ const ptOf = f => Math.round(opt.size.addr * opt.relA[f] * 2) / 2;
 function paintSizeA() {
   $('#sizeA').classList.toggle('hide', opt.mode !== 'addr');
   document.querySelectorAll('#sizeA .szs').forEach(g => { g.querySelector('output').textContent = ptOf(g.dataset.f) + 'pt'; });
+  document.querySelectorAll('#alignA [data-o]').forEach(g => {
+    const v = opt.offA[g.dataset.o];
+    g.querySelector('output').textContent = v === 0 ? '0mm' : (v > 0 ? '오른쪽 ' : '왼쪽 ') + Math.abs(v) + 'mm';
+  });
 }
 function paintMode() {
   paintSizeA();
@@ -1601,7 +1621,7 @@ function paintMode() {
     : AA.zip === 'center' && AA.addr === 'center' && AA.who === 'center' && AA.tel === 'center' ? 'center' : '';
   document.querySelectorAll('#segAlign button').forEach(b => b.classList.toggle('on', b.dataset.a === preset));
   $('#alignA').classList.toggle('hide', opt.mode !== 'addr');
-  document.querySelectorAll('#alignA .seg').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.a === AA[g.dataset.f])));
+  document.querySelectorAll('#alignA .seg[data-f]').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.a === AA[g.dataset.f])));
   $('#alignSub').classList.toggle('hide', opt.mode !== 'addr');
   $('#rowBold').classList.toggle('hide', opt.mode === 'addr');
   $('#optBold').checked = !!opt.bold[opt.mode];
@@ -1984,6 +2004,7 @@ function init() {
     setOpt(() => { opt.relA[f] = Math.min(4, Math.max(0.3, pt / opt.size.addr)); });
   });
   $('#sizeAReset').addEventListener('click', () => setOpt(() => { opt.relA = Object.assign({}, OPT0.relA); }));
+  $('#offAReset').addEventListener('click', () => setOpt(() => { opt.offA = Object.assign({}, OPT0.offA); }));
   $('#segAlign').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
     setOpt(() => {
@@ -1992,9 +2013,14 @@ function init() {
     });
   });
   $('#alignA').addEventListener('click', e => {
-    const b = e.target.closest('button'); if (!b) return;
-    const f = b.closest('.seg').dataset.f;
-    setOpt(() => { opt.alignA[f] = b.dataset.a; });
+    const b = e.target.closest('.seg button'); if (!b) return;
+    const g = b.closest('.seg');
+    if (g.dataset.o) {
+      const k = g.dataset.o;
+      setOpt(() => { opt.offA[k] = Math.max(-60, Math.min(60, Math.round((opt.offA[k] + 0.5 * +b.dataset.d) * 2) / 2)); });
+      return;
+    }
+    setOpt(() => { opt.alignA[g.dataset.f] = b.dataset.a; });
   });
   $('#optBold').addEventListener('change', e => setOpt(() => { opt.bold[opt.mode] = e.target.checked; }));
 
