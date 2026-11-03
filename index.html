@@ -215,6 +215,10 @@ textarea.ta.wrapit{white-space:pre-wrap}
 .dsum{margin-top:10px;font-size:12.5px;font-weight:700;color:var(--muted);line-height:1.6}
 .dsum b{color:var(--accent);font-weight:800}
 .dsum .bad{color:var(--danger)}
+.arow{display:flex;align-items:center;gap:8px;margin-top:6px}
+.arow>span{flex:0 0 58px;font-size:12.5px;font-weight:700;color:var(--muted)}
+.arow .seg{flex:1 1 auto;flex-wrap:nowrap}
+.arow .seg button{flex:1 1 0;min-height:36px;padding:5px 4px}
 .grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
 .rng{display:flex;align-items:center;gap:10px}
 .rng input[type=range]{flex:1 1 auto;accent-color:var(--accent);height:32px}
@@ -521,6 +525,12 @@ footer b{color:var(--fg)}
       <button type="button" data-a="left">왼쪽<i id="alignSub">받는 분은 오른쪽</i></button>
       <button type="button" data-a="center">가운데</button>
     </div>
+    <div id="alignA" style="margin-top:8px">
+      <div class="arow"><span>우편번호</span><div class="seg sm" data-f="zip"><button type="button" data-a="left">왼쪽</button><button type="button" data-a="center">가운데</button><button type="button" data-a="right">오른쪽</button></div></div>
+      <div class="arow"><span>주소</span><div class="seg sm" data-f="addr"><button type="button" data-a="left">왼쪽</button><button type="button" data-a="center">가운데</button><button type="button" data-a="right">오른쪽</button></div></div>
+      <div class="arow"><span>받는 분</span><div class="seg sm" data-f="who"><button type="button" data-a="left">왼쪽</button><button type="button" data-a="center">가운데</button><button type="button" data-a="right">오른쪽</button></div></div>
+      <div class="arow"><span>연락처</span><div class="seg sm" data-f="tel"><button type="button" data-a="left">왼쪽</button><button type="button" data-a="center">가운데</button><button type="button" data-a="right">오른쪽</button></div></div>
+    </div>
   </div>
   <label class="chk" id="rowBold"><input type="checkbox" id="optBold"><span>첫 줄을 크고 굵게<i>이름·제목 줄을 눈에 띄게</i></span></label>
 </section>
@@ -818,6 +828,7 @@ const OPT0 = {
   spec: '',
   custom: { w: 99.1, h: 38.1, rows: 7, cols: 2, top: 13.8, left: 5, hg: 2.5, vg: 0, circle: false },
   mode: 'addr', font: 'sans', size: { addr: 11, same: 16, list: 14 }, align: { addr: 'left', same: 'center', list: 'center' },
+  alignA: { zip: 'left', addr: 'left', who: 'right', tel: 'right' },   /* 주소 라벨 줄마다 정렬 */
   bold: { same: true, list: false }, honor: '귀하', copies: 1, copiesL: 1, zip: true, zipPos: 'top', tel: false,
   sheets: 1, split: 'line', offX: 0, offY: 0, guide: false
 };
@@ -827,7 +838,10 @@ function loadOpt() {
   try {
     const o = JSON.parse(localStorage.getItem('label_print.opt') || 'null');
     if (o && typeof o === 'object') for (const k in OPT0) if (k in o && typeof o[k] === typeof OPT0[k]) opt[k] = o[k];
-    for (const k of ['custom', 'size', 'align', 'bold']) opt[k] = Object.assign({}, OPT0[k], opt[k]);
+    /* 줄마다 정렬이 생기기 전에 「가운데」를 골라 둔 분은 모두 가운데로 */
+    if (o && !o.alignA && opt.align && opt.align.addr === 'center') opt.alignA = { zip: 'center', addr: 'center', who: 'center', tel: 'center' };
+    for (const k of ['custom', 'size', 'align', 'bold', 'alignA']) opt[k] = Object.assign({}, OPT0[k], opt[k]);
+    for (const k in opt.alignA) if (!['left', 'center', 'right'].includes(opt.alignA[k])) opt.alignA[k] = OPT0.alignA[k];
     if (opt.spec !== 'custom' && !specByKey(opt.spec)) opt.spec = POPULAR[0];
     if (!['addr', 'same', 'list'].includes(opt.mode)) opt.mode = 'addr';
     if (!['귀하', '님', '앞', '좌하', '귀중', ''].includes(opt.honor)) opt.honor = '귀하';
@@ -1132,18 +1146,18 @@ function labelsFromData() {
   const out = [];
   if (opt.mode === 'addr') {
     const rec = addrRecords();
-    const A = opt.align.addr;
+    const AA = opt.alignA;
     for (const r of rec) {
       const lines = [];
       const zipTop = opt.zip && r.zip && opt.zipPos !== 'below';
-      if (zipTop) lines.push({ t: r.zip, rel: 0.82, a: A === 'center' ? 'center' : 'left' });
+      if (zipTop) lines.push({ t: r.zip, rel: 0.82, a: AA.zip });
       const ad = [r.addr, r.addr2].filter(Boolean).join(' ');
-      if (ad) lines.push({ t: ad, rel: 1, a: A === 'center' ? 'center' : 'left' });
+      if (ad) lines.push({ t: ad, rel: 1, a: AA.addr });
       const who = [r.org, r.name, r.title].filter(Boolean).join(' ');
       if (who && lines.length) lines.push({ t: '', rel: 0.6, gap: true, a: 'left' });   /* 주소와 받는 분 사이를 조금 띄운다 */
-      if (who) lines.push({ t: who + (opt.honor ? ' ' + opt.honor : ''), rel: 1.25, b: true, a: A === 'center' ? 'center' : 'right' });
-      if (opt.zip && r.zip && !zipTop) lines.push({ t: r.zip, rel: 0.9, a: A === 'center' ? 'center' : 'right' });   /* 받는 분 바로 밑 */
-      if (opt.tel && r.tel) lines.push({ t: r.tel, rel: 0.85, a: A === 'center' ? 'center' : 'right' });
+      if (who) lines.push({ t: who + (opt.honor ? ' ' + opt.honor : ''), rel: 1.25, b: true, a: AA.who });
+      if (opt.zip && r.zip && !zipTop) lines.push({ t: r.zip, rel: 0.9, a: AA.zip });   /* 받는 분 바로 밑 */
+      if (opt.tel && r.tel) lines.push({ t: r.tel, rel: 0.85, a: AA.tel });
       if (!lines.length) continue;
       for (let c = 0; c < opt.copies; c++) out.push(lines);
     }
@@ -1549,7 +1563,12 @@ function paintMode() {
   document.querySelectorAll('#segFont button').forEach(b => b.classList.toggle('on', b.dataset.f === opt.font));
   const sz = opt.size[opt.mode];
   $('#rngSize').value = sz; $('#outSize').textContent = sz + 'pt';
-  document.querySelectorAll('#segAlign button').forEach(b => b.classList.toggle('on', b.dataset.a === opt.align[opt.mode]));
+  const AA = opt.alignA, preset = opt.mode !== 'addr' ? opt.align[opt.mode]
+    : AA.zip === 'left' && AA.addr === 'left' && AA.who === 'right' && AA.tel === 'right' ? 'left'
+    : AA.zip === 'center' && AA.addr === 'center' && AA.who === 'center' && AA.tel === 'center' ? 'center' : '';
+  document.querySelectorAll('#segAlign button').forEach(b => b.classList.toggle('on', b.dataset.a === preset));
+  $('#alignA').classList.toggle('hide', opt.mode !== 'addr');
+  document.querySelectorAll('#alignA .seg').forEach(g => g.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.a === AA[g.dataset.f])));
   $('#alignSub').classList.toggle('hide', opt.mode !== 'addr');
   $('#rowBold').classList.toggle('hide', opt.mode === 'addr');
   $('#optBold').checked = !!opt.bold[opt.mode];
@@ -1925,7 +1944,18 @@ function init() {
   /* 3. 글자 */
   $('#segFont').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.font = b.dataset.f; }); });
   $('#rngSize').addEventListener('input', e => { opt.size[opt.mode] = +e.target.value; $('#outSize').textContent = e.target.value + 'pt'; saveOpt(); update(); });
-  $('#segAlign').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; setOpt(() => { opt.align[opt.mode] = b.dataset.a; }); });
+  $('#segAlign').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    setOpt(() => {
+      opt.align[opt.mode] = b.dataset.a;
+      if (opt.mode === 'addr') opt.alignA = b.dataset.a === 'center' ? { zip: 'center', addr: 'center', who: 'center', tel: 'center' } : Object.assign({}, OPT0.alignA);
+    });
+  });
+  $('#alignA').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const f = b.closest('.seg').dataset.f;
+    setOpt(() => { opt.alignA[f] = b.dataset.a; });
+  });
   $('#optBold').addEventListener('change', e => setOpt(() => { opt.bold[opt.mode] = e.target.checked; }));
 
   /* 미리보기 · 인쇄 */
